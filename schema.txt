@@ -1,0 +1,96 @@
+StudentPortalSystem/
+│
+├── index.php                     # Landing / welcome page (done)
+├── login.php                     # Login form for all users (done)
+├── logout.php                    # Logout script (done)
+│
+├── dashboard_student.php          # Student dashboard after login (done)
+├── dashboard_teacher.php          # Teacher dashboard after login (done)
+├── admin_dashboard.php            # Admin dashboard home (done)
+│
+├── profile/                      # User profile management (done)
+│   ├── view_profile.php
+│   ├── edit_profile.php
+│   └── change_password.php
+│
+├── users/                        # Admin manages all user accounts here (done + UI fixed + change password)
+│   ├── manage_users.php
+│   ├── add_user.php
+│   ├── edit_user.php
+│   ├── delete_user.php
+│
+├── courses/                      # Course management module
+│   ├── courses.php
+│   ├── add_course.php
+│   ├── edit_course.php
+│   ├── enroll_course.php
+│   └── drop_course.php
+│
+├── subjects/                     # Subject management module (NEW)
+│   ├── subjects.php              # List all subjects
+│   ├── add_subject.php           # Add a new subject
+│   ├── edit_subject.php          # Edit subject details
+│   ├── assign_subject.php        # Assign subject to a teacher/course
+│   └── delete_subject.php        # Delete subject
+│
+├── grades/                       # Grades module
+│   ├── grades.php
+│   ├── add_grade.php
+│   └── edit_grade.php
+│
+├── attendance/                   # Attendance module
+│   ├── attendance.php
+│   ├── mark_attendance.php
+│   └── attendance_report.php
+│
+├── announcements/                # Announcements/news module
+│   ├── announcements.php
+│   ├── add_announcement.php
+│   └── delete_announcement.php
+│
+├── library/                      # Library module
+│   ├── library.php
+│   ├── add_book.php
+│   ├── borrow_book.php
+│   ├── return_book.php
+│   └── manage_books.php
+│
+├── messages/                     # Internal messaging system
+│   ├── inbox.php
+│   ├── compose.php
+│   ├── view_message.php
+│   └── delete_message.php
+│
+├── uploads/                      # File uploads (profile pics, assignments)
+│   ├── assignments/
+│   ├── profile_pics/
+│   └── materials/
+│
+├── assignments/                  # Assignment management module
+│   ├── assignments.php
+│   ├── submit_assignment.php
+│   ├── add_assignment.php
+│   └── grade_assignment.php
+│
+├── config/ (done)
+│   ├── db.php
+│   ├── auth.php
+│ 
+├── includes/
+│   ├── header.php
+│   ├── footer.php
+│   ├── navbar.php
+│   └── sidebar.php
+│
+├── css/
+│   ├── style.css
+│   ├── dashboard.css
+│   └── forms.css
+│
+├── js/
+│   ├── main.js
+│   ├── validation.js
+│   └── ajax.js
+│
+└── sql/
+    └── student_portal.sql        # Database schema only (done + fixed)

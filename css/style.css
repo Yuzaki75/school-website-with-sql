@@ -1,0 +1,274 @@
+/* ================= Global ================= */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: #fff; /* default text color on dark overlay */
+}
+
+/* ================= Header ================= */
+.landing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: rgba(0, 0, 0, 0.8); /* dark background */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  border-bottom: 2px solid orange;
+  position: relative;
+  z-index: 2;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  color: #fff;
+}
+
+.header-left .school-logo {
+  width: 60px;
+  height: auto;
+  margin-right: 15px;
+  border-radius: 50%;
+}
+
+.header-left .school-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-right .login-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: black;
+  color: orange;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-decoration: none;
+}
+
+.header-right .login-btn:hover {
+  background-color: orange;
+  color: black;
+}
+
+/* Burger button */
+.burger {
+  font-size: 26px;
+  background: none;
+  border: none;
+  color:orange;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ================= Side Menu ================= */
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: -260px; /* hidden by default */
+  width: 260px;
+  height: 100%;
+  background-color: orange; /* orange background */
+  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+  transition: right 0.3s ease;
+  z-index: 999;
+}
+
+.side-menu.open {
+  right: 0; /* slide in */
+}
+
+.side-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.side-menu ul li a {
+  display: block;
+  padding: 15px 20px;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0,0,0,0.5);
+}
+
+.side-menu ul li a:hover {
+  background-color: orange;
+}
+
+/* close button */
+.close-btn {
+  width: 100%;
+  padding: 15px 20px;
+  background: black;
+  color: orange;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.close-btn:hover {
+  background: orange;
+  color: black;
+}
+
+/*================== short content ======================*/
+.short-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(25vh - 80px);
+  text-align: left;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(0,0,0,0.5); /* black overlay for main content */
+}
+
+.short-content .description {
+  max-width: 800px;
+  background-color: rgba(0,0,0,5);
+  padding: 20px;
+  border-radius: 10px;
+  color: #fff;
+  line-height: 1.6;
+}
+
+/* ================= Landing Content ================= */
+.landing-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(50vh - 80px);
+  text-align: left;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  background-color: rgba(0,0,0,0.5); /* black overlay for main content */
+}
+
+.landing-content .description {
+  max-width: 800px;
+  background-color: rgba(0,0,0,1);
+  padding: 20px;
+  border-radius: 10px;
+  color: #fff;
+  line-height: 1.6;
+}
+
+/* Responsive tweaks */
+@media screen and (max-width: 768px) {
+  .landing-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header-right {
+    margin-top: 10px;
+  }
+  .landing-content .description {
+    padding: 15px;
+  }
+}
+
+/* ================= Boxes Section ================= */
+.gov-section,
+.systems-section {
+  position: relative;
+  z-index: 1;
+  padding: 40px 20px;
+  text-align: center;
+  color: #fff;
+  /* add this line to make the whole section dark */
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.gov-section h2,
+.systems-section h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: orange;
+}
+
+.gov-boxes,
+.systems-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.gov-box,
+.system-box {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  width: 150px;
+  padding: 15px;
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.gov-box img,
+.system-box img {
+  max-height: 60px;
+  margin-bottom: 10px;
+}
+
+.gov-box:hover,
+.system-box:hover {
+  transform: translateY(-5px);
+  background-color: rgba(0, 0, 0, 0.7); /* a little darker on hover */
+}
+
+.gov-box span,
+.system-box span {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
+
+
+/* ================= Footer ================= */
+.site-footer {
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 20px 10px;
+  font-size: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.site-footer a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.site-footer a:hover {
+  color: #d4d4d4;
+}
+
+.footer-content p {
+  margin: 5px 0;
+}
+
+/* Side boxes*/

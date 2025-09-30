@@ -1,0 +1,94 @@
+.content {
+            padding: 40px 30px;
+            background: rgb(0, 0, 0, 0.5);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: orange;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid orange;
+        }
+
+        .section p {
+            text-align: justify;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .vision-mission {
+            background: linear-gradient(135deg, rgb(0, 0, 0, 0.5), rgb(0, 0, 0, 0.5));
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .core-values {
+            background: rgb(0, 0, 0, 0.5);
+            padding: 20px;
+            border-left: 5px solid orange;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .core-values strong {
+            color: orange;
+            font-size: 1.2em;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            border-left: 3px solid orange;
+        }
+
+        .timeline-item {
+            margin-bottom: 25px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: orange;
+            border: 3px solid rgb(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 3px orange;
+        }
+
+        .timeline-item strong {
+            color: orange;
+            font-size: 1.1em;
+        }
+
+        .footer {
+            background: orange;
+            color: rgb(0, 0, 0, 0.5);
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .section h2 {
+                font-size: 1.5em;
+            }
+        }
