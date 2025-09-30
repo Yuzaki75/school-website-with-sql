@@ -19,14 +19,14 @@ StudentPortalSystem/
 │   ├── edit_user.php
 │   ├── delete_user.php
 │
-├── courses/                      # Course management module
+├── courses/                      # Course management module (added and fixed with link of subjects)
 │   ├── courses.php
 │   ├── add_course.php
 │   ├── edit_course.php
 │   ├── enroll_course.php
 │   └── drop_course.php
 │
-├── subjects/                     # Subject management module (NEW)
+├── subjects/                     # Subject management module (NEW) (done)
 │   ├── subjects.php              # List all subjects
 │   ├── add_subject.php           # Add a new subject
 │   ├── edit_subject.php          # Edit subject details
