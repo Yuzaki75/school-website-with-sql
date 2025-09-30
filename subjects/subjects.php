@@ -1,9 +1,8 @@
 <?php
-session_start();
+ session_start();
 include __DIR__ . '/../config/db.php';
 
-// Check if user is logged in and is admin or teacher
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'teacher'])) {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
@@ -129,8 +128,10 @@ if (!$result) {
 </header>
 
 <div class="container">
-    <h1>Manage Subjects</h1>
-    <a href="add_subject.php" class="btn btn-success mb-3">➕ Add New Subject</a>
+    <h1>Subjects</h1>
+    <?php if (in_array($_SESSION['role'], ['admin', 'teacher'])): ?>
+        <a href="add_subject.php" class="btn btn-success mb-3">➕ Add New Subject</a>
+    <?php endif; ?>
     <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>
@@ -139,7 +140,9 @@ if (!$result) {
                     <th>Subject Code</th>
                     <th>Subject Name</th>
                     <th>Description</th>
+                    <?php if (in_array($_SESSION['role'], ['admin', 'teacher'])): ?>
                     <th>Actions</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -149,10 +152,12 @@ if (!$result) {
                     <td><?= htmlspecialchars($row['subject_code']) ?></td>
                     <td><?= htmlspecialchars($row['subject_name']) ?></td>
                     <td><?= htmlspecialchars($row['description'] ?? '') ?></td>
+                    <?php if (in_array($_SESSION['role'], ['admin', 'teacher'])): ?>
                     <td>
                         <a href="edit_subject.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-primary">✏️ Edit</a>
                         <button onclick="confirmDelete(<?= htmlspecialchars($row['id']) ?>)" class="btn btn-sm btn-danger">❌ Delete</button>
                     </td>
+                    <?php endif; ?>
                 </tr>
             <?php endwhile; ?>
             </tbody>

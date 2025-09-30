@@ -1,29 +1,7 @@
 <?php
-session_start();
-include __DIR__ . '/../config/db.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
-
-$user_id = $_SESSION['user_id'];
-$username = $_SESSION['username'];
-$role = $_SESSION['role'];
-
-// Fetch profile picture
-$stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$stmt->bind_result($profile_pic_db);
-$stmt->fetch();
-$stmt->close();
-
-$profilePic = !empty($profile_pic_db) 
-    ? '../uploads/profile/' . basename($profile_pic_db) 
-    : '../uploads/profile/default.png';
-
-session_start();
 include __DIR__ . '/../config/db.php';
 
 if (!isset($_SESSION['user_id'])) {
