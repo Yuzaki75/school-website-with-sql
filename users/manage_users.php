@@ -78,7 +78,7 @@ if (!$result) {
   </div>
   <div class="header-right">
     <span class="username">Manage Users</span>
-    <a href="../admin_dashboard.php" class="profile-link">Back</a>
+    <a href="../admin_dashboard.php" class="logout-link">Back</a>
   </div>
 </header>
 

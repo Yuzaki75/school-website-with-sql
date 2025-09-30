@@ -254,8 +254,10 @@ body {
   text-align: center;
   padding: 20px 10px;
   font-size: 14px;
-  position: relative;
-  z-index: 2;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
 .site-footer a {

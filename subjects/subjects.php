@@ -124,7 +124,7 @@ if (!$result) {
         <a href="../profile/view_profile.php">
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
-        <a href="../logout.php" class="logout-link">Logout</a>
+        <a href="../admin_dashboard.php" class="logout-link">Back</a>
     </div>
 </header>
 

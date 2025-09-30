@@ -23,13 +23,37 @@ $profilePic = !empty($profile_pic_db)
     ? '../uploads/profile/' . basename($profile_pic_db) 
     : '../uploads/profile/default.png';
 
+session_start();
+include __DIR__ . '/../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$username = $_SESSION['username'];
+$role = $_SESSION['role'];
+
+// Fetch profile picture
+$stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($profile_pic_db);
+$stmt->fetch();
+$stmt->close();
+
+$profilePic = !empty($profile_pic_db) 
+    ? '../uploads/profile/' . basename($profile_pic_db) 
+    : '../uploads/profile/default.png';
+
 // Fetch courses
 if ($role === 'student') {
     $stmt = $conn->prepare("
         SELECT c.id, c.course_name, c.description
         FROM courses c
         JOIN enrollments e ON c.id = e.course_id
-        WHERE e.user_id = ?
+        WHERE e.student_id = ?
     ");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
@@ -134,7 +158,7 @@ if ($role === 'student') {
         <a href="../profile/view_profile.php">
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
-        <a href="../logout.php" class="logout-link">Logout</a>
+        <a href="../admin_dashboard.php" class="logout-link">Back</a>
     </div>
 </header>
 
