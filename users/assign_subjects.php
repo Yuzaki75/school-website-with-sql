@@ -8,71 +8,66 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'teac
     exit();
 }
 
-$id = $_GET['id'] ?? 0;
-$id = (int)$id;
+$error = '';
+$success = '';
 
-// Fetch course
-$stmt = $conn->prepare("SELECT * FROM courses WHERE id = ?");
-$stmt->bind_param("i", $id);
+// Get student id from query param
+$student_id = $_GET['id'] ?? 0;
+$student_id = (int)$student_id;
+
+// Fetch student info
+$stmt = $conn->prepare("SELECT id, username FROM users WHERE id=? AND role='student'");
+$stmt->bind_param("i", $student_id);
 $stmt->execute();
-$course = $stmt->get_result()->fetch_assoc();
+$result = $stmt->get_result();
+$student = $result->fetch_assoc();
+$stmt->close();
 
-if (!$course) {
-    header("Location: courses.php");
+if (!$student) {
+    header("Location: manage_users.php");
     exit();
 }
 
-// Fetch all subjects for selection
+// Fetch all subjects
 $subjects_result = $conn->query("SELECT * FROM subjects ORDER BY subject_name ASC");
 $all_subjects = [];
 while ($row = $subjects_result->fetch_assoc()) {
     $all_subjects[] = $row;
 }
 
-// Fetch subjects assigned to this course
-$course_subjects_result = $conn->prepare("SELECT subject_id FROM course_subjects WHERE course_id = ?");
-$course_subjects_result->bind_param("i", $id);
-$course_subjects_result->execute();
-$course_subjects_result->bind_result($subject_id);
+// Fetch subjects assigned to this student
+$student_subjects_result = $conn->prepare("SELECT subject_id FROM student_subjects WHERE student_id = ?");
+$student_subjects_result->bind_param("i", $student_id);
+$student_subjects_result->execute();
+$student_subjects_result->bind_result($subject_id);
 $assigned_subjects = [];
-while ($course_subjects_result->fetch()) {
+while ($student_subjects_result->fetch()) {
     $assigned_subjects[] = $subject_id;
 }
-$course_subjects_result->close();
+$student_subjects_result->close();
 
-$error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $course_name = trim($_POST['course_name'] ?? '');
     $selected_subjects = $_POST['subjects'] ?? [];
 
-    if (empty($course_name)) {
-        $error = "Course name is required.";
-    } else {
-        // Update course name
-        $stmt = $conn->prepare("UPDATE courses SET course_name=? WHERE id=?");
-        $stmt->bind_param("si", $course_name, $id);
-        $stmt->execute();
+    // Delete old assignments
+    $stmt_del = $conn->prepare("DELETE FROM student_subjects WHERE student_id=?");
+    $stmt_del->bind_param("i", $student_id);
+    $stmt_del->execute();
 
-        // Update course_subjects
-        // Delete old assignments
-        $stmt_del = $conn->prepare("DELETE FROM course_subjects WHERE course_id=?");
-        $stmt_del->bind_param("i", $id);
-        $stmt_del->execute();
-
-        // Insert new assignments
-        if (!empty($selected_subjects)) {
-            $stmt_ins = $conn->prepare("INSERT INTO course_subjects (course_id, subject_id) VALUES (?, ?)");
-            foreach ($selected_subjects as $subj_id) {
-                $subj_id = (int)$subj_id;
-                $stmt_ins->bind_param("ii", $id, $subj_id);
-                $stmt_ins->execute();
-            }
-            $stmt_ins->close();
+    // Insert new assignments
+    if (!empty($selected_subjects)) {
+        $stmt_ins = $conn->prepare("INSERT INTO student_subjects (student_id, subject_id) VALUES (?, ?)");
+        foreach ($selected_subjects as $subj_id) {
+            $subj_id = (int)$subj_id;
+            $stmt_ins->bind_param("ii", $student_id, $subj_id);
+            $stmt_ins->execute();
         }
-
-        header("Location: courses.php");
-        exit;
+        $stmt_ins->close();
     }
+
+    $success = "Subjects updated successfully.";
+    // Refresh assigned subjects
+    $assigned_subjects = $selected_subjects;
 }
 
 $user_id = $_SESSION['user_id'];
@@ -96,7 +91,7 @@ if (empty($profile_pic_db)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Edit Course</title>
+    <title>Assign Subjects to Student</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -146,7 +141,7 @@ if (empty($profile_pic_db)) {
         }
         .container {
             margin: 30px auto;
-            max-width: 600px;
+            max-width: 700px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -155,16 +150,14 @@ if (empty($profile_pic_db)) {
         label {
             font-weight: bold;
         }
-        input[type="text"], select {
+        select[multiple] {
             width: 100%;
-            padding: 8px;
+            height: 200px;
             margin-top: 5px;
             margin-bottom: 15px;
             border-radius: 5px;
             border: none;
-        }
-        select[multiple] {
-            height: 150px;
+            padding: 8px;
         }
         button {
             background-color: #007bff;
@@ -178,8 +171,8 @@ if (empty($profile_pic_db)) {
         button:hover {
             background-color: #0056b3;
         }
-        .error {
-            color: #ff6b6b;
+        .success {
+            color: #4BB543;
             margin-bottom: 15px;
         }
     </style>
@@ -200,14 +193,15 @@ if (empty($profile_pic_db)) {
 </header>
 
 <div class="container">
-    <h2>Edit Course</h2>
+    <h2>Assign Subjects to Student: <?= htmlspecialchars($student['username']) ?></h2>
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
+    <?php if ($success): ?>
+        <div class="success"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
     <form method="post" novalidate>
-        <label for="course_name">Course Name:</label>
-        <input type="text" id="course_name" name="course_name" value="<?= htmlspecialchars($course['course_name']) ?>" required />
-        <label for="subjects">Assign Subjects:</label>
+        <label for="subjects">Select Subjects:</label>
         <select id="subjects" name="subjects[]" multiple>
             <?php foreach ($all_subjects as $subject): ?>
                 <option value="<?= $subject['id'] ?>" <?= in_array($subject['id'], $assigned_subjects) ? 'selected' : '' ?>>
@@ -215,7 +209,7 @@ if (empty($profile_pic_db)) {
                 </option>
             <?php endforeach; ?>
         </select>
-        <button type="submit">Update</button>
+        <button type="submit">Update Subjects</button>
     </form>
 </div>
 </body>

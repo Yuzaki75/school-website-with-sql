@@ -116,6 +116,9 @@ if (!$result) {
             <td>
               <a href="edit_user.php?id=<?= urlencode($id) ?>" class="btn btn-sm btn-primary">Edit</a>
               <a href="change_password_user.php?id=<?= urlencode($id) ?>" class="btn btn-sm btn-warning">Change Password</a>
+              <?php if ($role === 'student'): ?>
+                <a href="assign_subjects.php?id=<?= urlencode($id) ?>" class="btn btn-sm btn-info">Assign Subjects</a>
+              <?php endif; ?>
               <a href="delete_user.php?id=<?= urlencode($id) ?>" class="btn btn-sm btn-danger"
                  onclick="return confirm('Delete this user?');">Delete</a>
             </td>

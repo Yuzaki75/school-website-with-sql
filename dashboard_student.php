@@ -137,16 +137,37 @@ if (empty($profile_pic_db)) {
         <h2>Welcome, <?php echo htmlspecialchars($username); ?> (Student)</h2>
         <p>Here you can access your classes, assignments, and announcements.</p>
 
-            <div class="cards">
-                <div class="card"><a href="courses/courses.php">Courses</a></div>
-                <div class="card"><a href="subjects/subjects.php">Subjects</a></div>
-                <div class="card"><a href="assignments/my_assignments.php">Assignments</a></div>
-                <div class="card"><a href="announcements/student_announcements.php">Announcements</a></div>
-                <div class="card"><a href="grades/my_grades.php">My Grades</a></div>
-                <div class="card"><a href="attendance/my_attendance.php">My Attendance</a></div>
-                <div class="card"><a href="library/library.php">Library</a></div>
-                <div class="card"><a href="messages/inbox.php">Messages</a></div>
-            </div>
+        <div class="cards">
+            <div class="card"><a href="courses/courses.php">Courses</a></div>
+            <div class="card"><a href="subjects/subjects.php">Subjects</a></div>
+            <div class="card"><a href="assignments/my_assignments.php">Assignments</a></div>
+            <div class="card"><a href="announcements/student_announcements.php">Announcements</a></div>
+            <div class="card"><a href="grades/my_grades.php">My Grades</a></div>
+            <div class="card"><a href="attendance/my_attendance.php">My Attendance</a></div>
+            <div class="card"><a href="library/library.php">Library</a></div>
+            <div class="card"><a href="messages/inbox.php">Messages</a></div>
+        </div>
+
+        <h3>Your Assigned Subjects</h3>
+        <div class="assigned-subjects">
+            <?php
+            // Fetch assigned subjects for the student
+            $stmt = $conn->prepare("SELECT s.subject_name FROM student_subjects ss JOIN subjects s ON ss.subject_id = s.id WHERE ss.student_id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
+                echo '<ul>';
+                while ($row = $result->fetch_assoc()) {
+                    echo '<li>' . htmlspecialchars($row['subject_name']) . '</li>';
+                }
+                echo '</ul>';
+            } else {
+                echo '<p>No subjects assigned yet.</p>';
+            }
+            $stmt->close();
+            ?>
+        </div>
     </div>
 
 <?php include 'includes/footer.php'; ?>
