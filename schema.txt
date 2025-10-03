@@ -33,7 +33,7 @@ StudentPortalSystem/
 │   ├── assign_subject.php        # Assign subject to a teacher/course
 │   └── delete_subject.php        # Delete subject
 │
-├── grades/                       # Grades module
+├── grades/                       # Grades module (done)
 │   ├── grades.php
 │   ├── add_grade.php
 │   └── edit_grade.php

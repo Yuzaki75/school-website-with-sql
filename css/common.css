@@ -1,0 +1,111 @@
+/* Common styles shared across the project */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: #fff;
+  background-color: #000; /* default background */
+}
+
+h2, h3 {
+  color: #f0ad4e;
+  text-align: center;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(240, 173, 78, 0.5);
+}
+
+table th, table td {
+  padding: 12px 15px;
+  border: 1px solid #f0ad4e;
+  text-align: left;
+  color: white;
+}
+
+table th {
+  background-color: rgba(240, 173, 78, 0.9);
+  font-weight: bold;
+}
+
+table tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+form {
+  width: 90%;
+  max-width: 600px;
+  margin: 20px auto;
+  background: rgba(0,0,0,0.7);
+  padding: 20px;
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 0 15px rgba(240, 173, 78, 0.7);
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #f0ad4e;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #f0ad4e;
+  box-sizing: border-box;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 1rem;
+}
+
+button {
+  background-color: #f0ad4e;
+  color: black;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #d4941f;
+}
+
+p {
+  text-align: center;
+  font-weight: bold;
+  color: #f0ad4e;
+}
+
+/* Links */
+a {
+  color: #f0ad4e;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

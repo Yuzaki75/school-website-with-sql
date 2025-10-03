@@ -11,76 +11,71 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'teac
 $id = $_GET['id'] ?? 0;
 $id = (int)$id;
 
-// Fetch course
-$stmt = $conn->prepare("SELECT * FROM courses WHERE id = ?");
+// Fetch grade
+$stmt = $conn->prepare("SELECT * FROM grades WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$course = $stmt->get_result()->fetch_assoc();
+$grade = $stmt->get_result()->fetch_assoc();
 
-if (!$course) {
-    header("Location: courses.php");
+if (!$grade) {
+    header("Location: grades.php");
     exit();
 }
 
-// Fetch all subjects for selection
-$subjects_result = $conn->query("SELECT * FROM subjects ORDER BY subject_name ASC");
-$all_subjects = [];
-while ($row = $subjects_result->fetch_assoc()) {
-    $all_subjects[] = $row;
-}
-
-// Fetch subjects assigned to this course
-$course_subjects_result = $conn->prepare("SELECT subject_id FROM course_subjects WHERE course_id = ?");
-$course_subjects_result->bind_param("i", $id);
-$course_subjects_result->execute();
-$course_subjects_result->bind_result($subject_id);
-$assigned_subjects = [];
-while ($course_subjects_result->fetch()) {
-    $assigned_subjects[] = $subject_id;
-}
-$course_subjects_result->close();
-
 $error = '';
+$success = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $course_name = trim($_POST['course_name'] ?? '');
-    $selected_subjects = $_POST['subjects'] ?? [];
+    $student_id = $_POST['student_id'] ?? '';
+    $course_id = $_POST['course_id'] ?? '';
+    $subject_id = $_POST['subject_id'] ?? '';
+    $grade_value = $_POST['grade'] ?? '';
 
-    if (empty($course_name)) {
-        $error = "Course name is required.";
+    if (empty($student_id) || empty($course_id) || empty($subject_id) || $grade_value === '') {
+        $error = "All fields are required.";
     } else {
-        // Update course name
-        $stmt = $conn->prepare("UPDATE courses SET course_name=? WHERE id=?");
-        $stmt->bind_param("si", $course_name, $id);
-        $stmt->execute();
-
-        // Update course_subjects
-        // Delete old assignments
-        $stmt_del = $conn->prepare("DELETE FROM course_subjects WHERE course_id=?");
-        $stmt_del->bind_param("i", $id);
-        $stmt_del->execute();
-
-        // Insert new assignments
-        if (!empty($selected_subjects)) {
-            $stmt_ins = $conn->prepare("INSERT INTO course_subjects (course_id, subject_id) VALUES (?, ?)");
-            foreach ($selected_subjects as $subj_id) {
-                $subj_id = (int)$subj_id;
-                $stmt_ins->bind_param("ii", $id, $subj_id);
-                $stmt_ins->execute();
-            }
-            $stmt_ins->close();
+        $stmt = $conn->prepare("UPDATE grades SET student_id=?, course_id=?, subject_id=?, grade=? WHERE id=?");
+        $stmt->bind_param("iii di", $student_id, $course_id, $subject_id, $grade_value, $id);
+        if ($stmt->execute()) {
+            $success = "Grade updated successfully.";
+            // Refresh grade data
+            $stmt = $conn->prepare("SELECT * FROM grades WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $grade = $stmt->get_result()->fetch_assoc();
+        } else {
+            $error = "Failed to update grade.";
         }
-
-        header("Location: courses.php");
-        exit;
+        $stmt->close();
     }
 }
 
-$user_id = $_SESSION['user_id'];
+// Fetch students
+$students_result = $conn->query("SELECT id, full_name FROM users WHERE role = 'student' ORDER BY full_name ASC");
+$students = [];
+while ($row = $students_result->fetch_assoc()) {
+    $students[] = $row;
+}
+
+// Fetch courses
+$courses_result = $conn->query("SELECT id, course_name FROM courses ORDER BY course_name ASC");
+$courses = [];
+while ($row = $courses_result->fetch_assoc()) {
+    $courses[] = $row;
+}
+
+// Fetch subjects
+$subjects_result = $conn->query("SELECT id, subject_name FROM subjects ORDER BY subject_name ASC");
+$subjects = [];
+while ($row = $subjects_result->fetch_assoc()) {
+    $subjects[] = $row;
+}
+
 $username = $_SESSION['username'];
 
 // fetch profile picture fresh from DB
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
@@ -96,7 +91,7 @@ if (empty($profile_pic_db)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Edit Course</title>
+    <title>Edit Grade</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -155,16 +150,13 @@ if (empty($profile_pic_db)) {
         label {
             font-weight: bold;
         }
-        input[type="text"], select {
+        select, input[type="number"] {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
             margin-bottom: 15px;
             border-radius: 5px;
             border: none;
-        }
-        select[multiple] {
-            height: 150px;
         }
         button {
             background-color: #007bff;
@@ -180,6 +172,10 @@ if (empty($profile_pic_db)) {
         }
         .error {
             color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+        .success {
+            color: #4BB543;
             margin-bottom: 15px;
         }
     </style>
@@ -200,22 +196,47 @@ if (empty($profile_pic_db)) {
 </header>
 
 <div class="container">
-    <h2>Edit Course</h2>
+    <h2>Edit Grade</h2>
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
+    <?php elseif ($success): ?>
+        <div class="success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
     <form method="post" novalidate>
-        <label for="course_name">Course Name:</label>
-        <input type="text" id="course_name" name="course_name" value="<?= htmlspecialchars($course['course_name']) ?>" required />
-        <label for="subjects">Assign Subjects:</label>
-        <select id="subjects" name="subjects[]" multiple>
-            <?php foreach ($all_subjects as $subject): ?>
-                <option value="<?= $subject['id'] ?>" <?= in_array($subject['id'], $assigned_subjects) ? 'selected' : '' ?>>
+        <label for="student_id">Student:</label>
+        <select id="student_id" name="student_id" required>
+            <option value="">Select Student</option>
+            <?php foreach ($students as $student): ?>
+                <option value="<?= $student['id'] ?>" <?= $student['id'] == $grade['student_id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($student['full_name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="course_id">Course:</label>
+        <select id="course_id" name="course_id" required>
+            <option value="">Select Course</option>
+            <?php foreach ($courses as $course): ?>
+                <option value="<?= $course['id'] ?>" <?= $course['id'] == $grade['course_id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($course['course_name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="subject_id">Subject:</label>
+        <select id="subject_id" name="subject_id" required>
+            <option value="">Select Subject</option>
+            <?php foreach ($subjects as $subject): ?>
+                <option value="<?= $subject['id'] ?>" <?= $subject['id'] == $grade['subject_id'] ? 'selected' : '' ?>>
                     <?= htmlspecialchars($subject['subject_name']) ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <button type="submit" class="btn btn-primary">Update</button>
+
+        <label for="grade">Grade:</label>
+        <input type="number" id="grade" name="grade" min="0" max="100" step="0.01" value="<?= htmlspecialchars($grade['grade']) ?>" required />
+
+        <button type="submit">Update Grade</button>
     </form>
 </div>
 </body>

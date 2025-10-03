@@ -1,19 +1,39 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 include __DIR__ . '/../config/db.php';
 
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-$username = $_SESSION['username'];
-$role = $_SESSION['role'];
+$role = $_SESSION['role'] ?? '';
 
-// Fetch profile picture
+if ($role === 'student') {
+    $stmt = $conn->prepare("SELECT g.id, c.course_name, s.subject_name, g.grade 
+                            FROM grades g
+                            JOIN subjects s ON g.subject_id = s.id
+                            JOIN courses c ON s.course_id = c.id
+                            WHERE g.student_id = ?");
+    $stmt->bind_param("i", $user_id);
+} else {
+    $stmt = $conn->prepare("SELECT g.id, u.full_name, c.course_name, s.subject_name, g.grade 
+                            FROM grades g
+                            JOIN users u ON g.student_id = u.id
+                            JOIN subjects s ON g.subject_id = s.id
+                            JOIN courses c ON s.course_id = c.id");
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+$grades = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$username = $_SESSION['username'];
+
+// fetch profile picture fresh from DB
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -21,33 +41,17 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-$profilePic = !empty($profile_pic_db) 
-    ? '../uploads/profile/' . basename($profile_pic_db) 
-    : '../uploads/profile/default.png';
-
-// Fetch courses
-    if ($role === 'student') {
-        $stmt = $conn->prepare("
-            SELECT c.id, c.course_name
-            FROM courses c
-            JOIN enrollments e ON c.id = e.course_id
-            WHERE e.student_id = ?
-        ");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-    } elseif (in_array($role, ['admin', 'teacher'])) {
-        $result = $conn->query("SELECT * FROM courses");
-    } else {
-        header("Location: ../login.php");
-        exit();
-    }
+if (empty($profile_pic_db)) {
+    $profilePic = '../uploads/profile/default.png';
+} else {
+    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Courses</title>
+    <title>Grades</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -103,27 +107,27 @@ $profilePic = !empty($profile_pic_db)
             border-radius: 10px;
             color: #fff;
         }
-        h1 {
-            margin-bottom: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
         }
-        .table thead {
-            background-color: #343a40;
-            color: #fff;
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
         }
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
+        th {
+            background-color: #007bff;
+            color: white;
         }
-        .btn-sm {
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn {
             margin-right: 5px;
         }
     </style>
-    <script>
-        function confirmDelete(courseId) {
-            if (confirm("Are you sure you want to delete this course?")) {
-                window.location.href = "drop_course.php?id=" + courseId;
-            }
-        }
-    </script>
 </head>
 <body>
 <header class="dashboard-header">
@@ -136,44 +140,49 @@ $profilePic = !empty($profile_pic_db)
         <a href="../profile/view_profile.php">
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
-        <a href="../admin_dashboard.php" class="logout-link">Back</a>
+        <a href="../logout.php" class="logout-link">Logout</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Courses</h1>
-    <?php if (in_array($role, ['admin', 'teacher'])): ?>
-        <a href="add_course.php" class="btn btn-success mb-3">➕ Add New Course</a>
-    <?php endif; ?>
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
+    <h2>Grades</h2>
+    <?php if (empty($grades)): ?>
+        <p>No grades found.</p>
+    <?php else: ?>
+        <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Course Name</th>
-                    <th>Description</th>
-                    <?php if (in_array($role, ['admin', 'teacher'])): ?>
+                    <?php if ($role !== 'student'): ?>
+                    <th>Student</th>
+                    <?php endif; ?>
+                    <th>Course</th>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <?php if ($role === 'admin' || $role === 'teacher'): ?>
                     <th>Actions</th>
                     <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
-            <?php while ($row = $result->fetch_assoc()): ?>
+                <?php foreach ($grades as $grade): ?>
                 <tr>
-                    <td><?= htmlspecialchars($row['id']) ?></td>
-                    <td><?= htmlspecialchars($row['course_name']) ?></td>
-                    <td><?= htmlspecialchars($row['description'] ?? '') ?></td>
-                    <?php if (in_array($role, ['admin', 'teacher'])): ?>
+                    <?php if ($role !== 'student'): ?>
+                    <td><?= htmlspecialchars($grade['full_name']) ?></td>
+                    <?php endif; ?>
+                    <td><?= htmlspecialchars($grade['course_name']) ?></td>
+                    <td><?= htmlspecialchars($grade['subject_name']) ?></td>
+                    <td><?= htmlspecialchars($grade['grade']) ?></td>
+                    <?php if ($role === 'admin' || $role === 'teacher'): ?>
                     <td>
-                        <a href="edit_course.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-primary">✏️ Edit</a>
-                        <button onclick="confirmDelete(<?= htmlspecialchars($row['id']) ?>)" class="btn btn-sm btn-danger">❌ Delete</button>
+                        <a href="edit_grade.php?id=<?= $grade['id'] ?>" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="delete_grade.php?id=<?= $grade['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this grade?');">Delete</a>
                     </td>
                     <?php endif; ?>
                 </tr>
-            <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
-    </div>
+    <?php endif; ?>
 </div>
 </body>
 </html>

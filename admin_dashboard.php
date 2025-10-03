@@ -125,21 +125,30 @@ if (empty($profile_pic_db)) {
         </div>
     </header>
 
-    <div class="container">
+<div class="container">
         <h2>Welcome, <?php echo htmlspecialchars($username); ?> (Admin)</h2>
         <p>This is your admin dashboard.</p>
 
             <div class="cards">
+                <!-- Manage Section -->
                 <div class="card"><a href="users/manage_users.php">Manage Users</a></div>
+                <div class="card"><a href="users/manage_students.php">Manage Students</a></div>
                 <div class="card"><a href="courses/courses.php">Manage Courses</a></div>
                 <div class="card"><a href="subjects/subjects.php">Manage Subjects</a></div>
-                <div class="card"><a href="grades/grades.php">Manage Grades</a></div>
                 <div class="card"><a href="attendance/attendance.php">Manage Attendance</a></div>
-                <div class="card"><a href="announcements/announcements.php">Announcements</a></div>
-                <div class="card"><a href="library/library.php">Library</a></div>
-                <div class="card"><a href="messages/inbox.php">Messages</a></div>
-                <div class="card"><a href="assignments/assignments.php">Assignments</a></div>
+                <div class="card"><a href="assignments/assignments.php">Manage Assignments</a></div>
+
+                <!-- View Section -->
+                <div class="card"><a href="grades/grades.php">View and Manage Grades</a></div>
+                <div class="card"><a href="announcements/announcements.php">View Announcements</a></div>
+                <div class="card"><a href="library/library.php">View Library</a></div>
+                <div class="card"><a href="messages/inbox.php">View Messages</a></div>
+
+                <!-- Add Section -->
+                <div class="card"><a href="grades/add_grade.php">Add Grade</a></div>
             </div>
-    </div>
+</div>
+
+<?php include 'includes/footer.php'; ?>
 </body>
 </html>

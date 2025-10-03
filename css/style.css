@@ -1,20 +1,11 @@
-/* ================= Global ================= */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  position: relative;
-  min-height: 100vh;
-  overflow-x: hidden;
-  color: #fff; /* default text color on dark overlay */
-}
+/* Global styles specific to layout and header */
 
-/* ================= Header ================= */
 .landing-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: rgba(0, 0, 0, 0.8); /* dark background */
+  background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0 2px 5px rgba(0,0,0,0.5);
   border-bottom: 2px solid orange;
   position: relative;
@@ -73,21 +64,21 @@ body {
   line-height: 1;
 }
 
-/* ================= Side Menu ================= */
+/* Side Menu */
 .side-menu {
   position: fixed;
   top: 0;
-  right: -260px; /* hidden by default */
+  right: -260px;
   width: 260px;
   height: 100%;
-  background-color: orange; /* orange background */
+  background-color: orange;
   box-shadow: -2px 0 5px rgba(0,0,0,0.5);
   transition: right 0.3s ease;
   z-index: 999;
 }
 
 .side-menu.open {
-  right: 0; /* slide in */
+  right: 0;
 }
 
 .side-menu ul {
@@ -109,7 +100,7 @@ body {
   background-color: orange;
 }
 
-/* close button */
+/* Close button */
 .close-btn {
   width: 100%;
   padding: 15px 20px;
@@ -128,7 +119,7 @@ body {
   color: black;
 }
 
-/*================== short content ======================*/
+/* Short content */
 .short-content {
   display: flex;
   justify-content: center;
@@ -138,19 +129,19 @@ body {
   padding: 20px;
   position: relative;
   z-index: 1;
-  background-color: rgba(0,0,0,0.5); /* black overlay for main content */
+  background-color: rgba(0,0,0,0.5);
 }
 
 .short-content .description {
   max-width: 800px;
-  background-color: rgba(0,0,0,5);
+  background-color: rgba(0,0,0,0.5);
   padding: 20px;
   border-radius: 10px;
   color: #fff;
   line-height: 1.6;
 }
 
-/* ================= Landing Content ================= */
+/* Landing content */
 .landing-content {
   display: flex;
   justify-content: center;
@@ -160,12 +151,12 @@ body {
   padding: 20px;
   position: relative;
   z-index: 1;
-  background-color: rgba(0,0,0,0.5); /* black overlay for main content */
+  background-color: rgba(0,0,0,0.5);
 }
 
 .landing-content .description {
   max-width: 800px;
-  background-color: rgba(0,0,0,1);
+  background-color: rgba(0,0,0,0.5);
   padding: 20px;
   border-radius: 10px;
   color: #fff;
@@ -186,7 +177,7 @@ body {
   }
 }
 
-/* ================= Boxes Section ================= */
+/* Boxes Section */
 .gov-section,
 .systems-section {
   position: relative;
@@ -194,7 +185,6 @@ body {
   padding: 40px 20px;
   text-align: center;
   color: #fff;
-  /* add this line to make the whole section dark */
   background-color: rgba(0, 0, 0, 0.5);
 }
 
@@ -236,7 +226,7 @@ body {
 .gov-box:hover,
 .system-box:hover {
   transform: translateY(-5px);
-  background-color: rgba(0, 0, 0, 0.7); /* a little darker on hover */
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .gov-box span,
@@ -246,15 +236,14 @@ body {
   text-align: center;
 }
 
-
-/* ================= Footer ================= */
+/* Footer */
 .site-footer {
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
   text-align: center;
   padding: 20px 10px;
   font-size: 14px;
-  position: fixed;
+  position: relative; /* Changed from fixed to relative */
   bottom: 0;
   width: 100%;
   z-index: 1000;
@@ -272,5 +261,3 @@ body {
 .footer-content p {
   margin: 5px 0;
 }
-
-/* Side boxes*/
