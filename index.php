@@ -267,6 +267,45 @@
             object-fit: cover;
             display: block;
         }
+
+        /* School Facilities Section */
+        .facilities-section {
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            margin: 20px;
+            border-radius: 10px;
+        }
+
+        .facilities-section h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: orange;
+        }
+
+        .facilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .facility-item {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            background: white;
+        }
+
+        .facility-item img,
+        .facility-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -288,6 +327,7 @@
         <div class="short-content">
             <div class="description">
                 <h5>Dominican College of Santa Rosa is a school that teaches different academic skills and values that will enhance and develop skills of the students to prepare them on their careers in the near future.</h5>
+                <p>“Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.”</p>
             </div>
         </div>
 
@@ -308,10 +348,10 @@
                 <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/03/Admission-d-1536x922.png" alt="Image 1">
             </div>
             <div class="box">
-                <video src="https://www.dcsr.edu.ph/wp-content/uploads/2022/03/AVP_1.mp4" autoplay muted controls loop></video>
+                <video src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/school-faacilities.mp4" autoplay muted controls loop></video>
             </div>
             <div class="box">
-                <img src="../uploads/background.jpeg" alt="Image 2">
+                <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/289777579_1177443696429664_7501385974809576910_n-3-768x768.jpg" alt="Image 2">
             </div>
         </div>
 
@@ -362,6 +402,25 @@
                     <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/03/HRIS.png" alt="HRIS">
                     <span>HRIS</span>
                 </a>
+            </div>
+        </section>
+
+        <!-- School Facilities Section -->
+        <section class="facilities-section">
+            <h2>School Facilities</h2>
+            <div class="facilities-grid">
+                <div class="facility-item">
+                    <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/289558795_1177443303096370_8754474628761991918_n-3-1536x1536.jpg" alt="Facility 1">
+                </div>
+                <div class="facility-item">
+                    <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/289673747_1177443156429718_7165761455267296862_n-3-1536x1536.jpg" alt="Facility 2">
+                </div>
+                <div class="facility-item">
+                    <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/289680041_1177443406429693_5662393725685911572_n-3-768x768.jpg" alt="Facility 3">
+                </div>
+                <div class="facility-item">
+                    <img src="https://www.dcsr.edu.ph/wp-content/uploads/2022/06/289765045_1177443633096337_4764863265214506845_n-3-768x768.jpg" alt="Facility 4">
+                </div>
             </div>
         </section>
 

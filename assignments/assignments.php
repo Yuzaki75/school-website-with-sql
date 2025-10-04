@@ -184,7 +184,21 @@ if (empty($profile_pic_db)) {
 </header>
 
 <div class="container">
-    <h2>Assignments</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Assignments</h2>
+        <?php
+        $back_url = '';
+        if ($role === 'student') {
+            $back_url = '../dashboard_student.php';
+        } elseif ($role === 'teacher') {
+            $back_url = '../dashboard_teacher.php';
+        } elseif ($role === 'admin') {
+            $back_url = '../admin_dashboard.php';
+        }
+        if ($back_url): ?>
+            <a href="<?= $back_url ?>" class="btn btn-outline-light">&larr; Back to Dashboard</a>
+        <?php endif; ?>
+    </div>
 
     <?php if ($role === 'teacher' || $role === 'admin'): ?>
         <a href="add_assignment.php" class="btn btn-primary add-assignment-btn">Add New Assignment</a>

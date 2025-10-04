@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +19,21 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
-}
+// Fetch user's borrow records
+$stmt = $conn->prepare("SELECT br.id, b.book_title, b.author, br.borrow_date, br.due_date, br.status FROM borrow_records br JOIN books b ON br.book_id = b.id WHERE br.borrower_id = ? ORDER BY br.borrow_date DESC");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$borrows = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>My Borrows</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -104,6 +102,17 @@ while ($row = $result->fetch_assoc()) {
         .btn-sm {
             margin-right: 5px;
         }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -118,41 +127,60 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>My Borrowed Books</h1>
+        <?php
+        $back_url = '';
+        if ($role === 'admin') {
+            $back_url = '../admin_dashboard.php';
+        } elseif ($role === 'teacher') {
+            $back_url = '../dashboard_teacher.php';
+        } elseif ($role === 'student') {
+            $back_url = '../dashboard_student.php';
+        }
+        ?>
+        <a href="<?= $back_url ?>" class="btn btn-outline-light">Back to Dashboard</a>
+    </div>
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Book Title</th>
+                <th>Author</th>
+                <th>Borrow Date</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($borrows as $borrow): ?>
+            <tr>
+                <td><?= htmlspecialchars($borrow['book_title']) ?></td>
+                <td><?= htmlspecialchars($borrow['author']) ?></td>
+                <td><?= htmlspecialchars($borrow['borrow_date']) ?></td>
+                <td><?= htmlspecialchars($borrow['due_date']) ?></td>
+                <td>
+                    <?php
+                    $status = $borrow['status'];
+                    $class = 'text-success';
+                    if ($status === 'overdue') $class = 'text-danger';
+                    elseif ($status === 'returned') $class = 'text-muted';
+                    ?>
+                    <span class="<?= $class ?>"><?= ucfirst($status) ?></span>
+                </td>
+                <td>
+                    <?php if ($status === 'borrowed'): ?>
+                        <a href="return_book.php?id=<?= urlencode($borrow['id']) ?>" class="btn btn-warning btn-sm">Return</a>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
 </div>
 </body>
 </html>

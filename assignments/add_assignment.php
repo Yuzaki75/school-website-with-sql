@@ -217,7 +217,7 @@ if (empty($profile_pic_db)) {
 </header>
 
 <div class="container">
-    <a href="assignments.php" class="back-link">&larr; Back to Assignments</a>
+    <a href="assignments.php" class="btn btn-outline-light mb-3">&larr; Back to Assignments</a>
     <h2>Add New Assignment</h2>
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>

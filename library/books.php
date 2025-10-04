@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,20 +19,23 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch all students
-$result = $conn->query("SELECT id, username FROM users WHERE role='student' ORDER BY username ASC");
+// Fetch all books
+$result = $conn->query("SELECT id, book_title, author, isbn, category, total_copies, available_copies, description FROM books ORDER BY book_title ASC");
+
+$message = '';
+if (isset($_GET['success'])) {
+    $message = '<div class="alert alert-success">' . htmlspecialchars($_GET['success']) . '</div>';
+} elseif (isset($_GET['error'])) {
+    $message = '<div class="alert alert-danger">' . htmlspecialchars($_GET['error']) . '</div>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Students</title>
+    <title>Library Books</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -81,7 +85,7 @@ $result = $conn->query("SELECT id, username FROM users WHERE role='student' ORDE
         }
         .container {
             margin: 30px auto;
-            max-width: 900px;
+            max-width: 1200px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -100,6 +104,17 @@ $result = $conn->query("SELECT id, username FROM users WHERE role='student' ORDE
         .btn-sm {
             margin-right: 5px;
         }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -114,41 +129,59 @@ $result = $conn->query("SELECT id, username FROM users WHERE role='student' ORDE
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Students</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Library Books</h1>
+        <?php
+        $back_url = '';
+        if ($role === 'admin') {
+            $back_url = '../admin_dashboard.php';
+        } elseif ($role === 'teacher') {
+            $back_url = '../dashboard_teacher.php';
+        } elseif ($role === 'student') {
+            $back_url = '../dashboard_student.php';
+        }
+        ?>
+        <a href="<?= $back_url ?>" class="btn btn-outline-light">Back to Dashboard</a>
+    </div>
+    <?= $message ?>
+    <?php if ($role === 'admin' || $role === 'teacher'): ?>
+        <div class="mb-3">
+            <a href="add_book.php" class="btn btn-success">Add Book</a>
+        </div>
+    <?php endif; ?>
     <table class="table table-striped align-middle">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Courses</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>Total Copies</th>
+                <th>Available</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
         <?php while ($row = $result->fetch_assoc()): ?>
-            <?php
-                // Fetch courses for this student
-                $stmt_courses = $conn->prepare("SELECT c.course_name FROM courses c JOIN enrollments e ON c.id = e.course_id WHERE e.student_id = ?");
-                $stmt_courses->bind_param("i", $row['id']);
-                $stmt_courses->execute();
-                $courses_result = $stmt_courses->get_result();
-                $courses = [];
-                while ($course_row = $courses_result->fetch_assoc()) {
-                    $courses[] = htmlspecialchars($course_row['course_name']);
-                }
-                $stmt_courses->close();
-            ?>
             <tr>
-                <td><?= htmlspecialchars($row['id']) ?></td>
-                <td><?= htmlspecialchars($row['username']) ?></td>
-                <td><?= implode(", ", $courses) ?></td>
+                <td><?= htmlspecialchars($row['book_title']) ?></td>
+                <td><?= htmlspecialchars($row['author']) ?></td>
+                <td><?= htmlspecialchars($row['isbn']) ?></td>
+                <td><?= htmlspecialchars($row['category']) ?></td>
+                <td><?= htmlspecialchars($row['total_copies']) ?></td>
+                <td><?= htmlspecialchars($row['available_copies']) ?></td>
                 <td>
-                    <a href="assign_courses.php?id=<?= urlencode($row['id']) ?>" class="btn btn-primary btn-sm">Assign Courses</a>
+                    <?php if ($role === 'student' && $row['available_copies'] > 0): ?>
+                        <a href="borrow_book.php?id=<?= urlencode($row['id']) ?>" class="btn btn-primary btn-sm">Borrow</a>
+                    <?php endif; ?>
+                    <?php if ($role === 'admin' || $role === 'teacher'): ?>
+                        <a href="edit_book.php?id=<?= urlencode($row['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
+                        <a href="delete_book.php?id=<?= urlencode($row['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this book?');">Delete</a>
+                    <?php endif; ?>
                 </td>
             </tr>
         <?php endwhile; ?>

@@ -25,7 +25,7 @@ $profilePic = !empty($profile_pic_db)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
-    $course_id = filter_input(INPUT_POST, 'course_id', FILTER_VALIDATE_INT);
+    $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
     $date = filter_input(INPUT_POST, 'date', FILTER_SANITIZE_STRING);
     $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
 
@@ -34,34 +34,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$student_id) {
         $errors[] = "Invalid student selected.";
     }
-    if (!$course_id) {
-        $errors[] = "Invalid course selected.";
+    if (!$subject_id) {
+        $errors[] = "Invalid subject selected.";
     }
     if (!$date) {
         $errors[] = "Invalid date.";
     }
-    $valid_statuses = ['Present', 'Absent', 'Late'];
+    $valid_statuses = ['present', 'absent', 'late'];
     if (!in_array($status, $valid_statuses)) {
         $errors[] = "Invalid status selected.";
     }
 
     if (empty($errors)) {
         // Check if attendance already exists
-        $stmt = $conn->prepare("SELECT id FROM attendance WHERE student_id = ? AND course_id = ? AND date = ?");
-        $stmt->bind_param("iis", $student_id, $course_id, $date);
+        $stmt = $conn->prepare("SELECT id FROM attendance WHERE student_id = ? AND subject_id = ? AND date = ?");
+        $stmt->bind_param("iis", $student_id, $subject_id, $date);
         $stmt->execute();
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
             $stmt->close();
-            $stmt = $conn->prepare("UPDATE attendance SET status = ? WHERE student_id = ? AND course_id = ? AND date = ?");
-            $stmt->bind_param("siis", $status, $student_id, $course_id, $date);
+            $stmt = $conn->prepare("UPDATE attendance SET status = ?, marked_by = ? WHERE student_id = ? AND subject_id = ? AND date = ?");
+            $stmt->bind_param("siiis", $status, $user_id, $student_id, $subject_id, $date);
         } else {
             $stmt->close();
-            $stmt = $conn->prepare("INSERT INTO attendance (student_id, course_id, date, status) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("iiss", $student_id, $course_id, $date, $status);
+            $stmt = $conn->prepare("INSERT INTO attendance (student_id, subject_id, date, status, marked_by) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("iissi", $student_id, $subject_id, $date, $status, $user_id);
         }
-        
+
         if ($stmt->execute()) {
             $success_message = "Attendance marked successfully!";
         } else {
@@ -80,12 +80,12 @@ if ($result) {
     }
 }
 
-// Fetch courses list
-$courses = [];
-$result = $conn->query("SELECT id, course_name FROM courses ORDER BY course_name");
+// Fetch subjects list
+$subjects = [];
+$result = $conn->query("SELECT id, subject_code, subject_name FROM subjects ORDER BY subject_name");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        $courses[] = $row;
+        $subjects[] = $row;
     }
 }
 ?>
@@ -97,8 +97,70 @@ if ($result) {
     <title>Mark Attendance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/attendance.css">
-    <</head>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('../uploads/background.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+            min-height: 100vh;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            backdrop-filter: blur(6px);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.8);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .school-logo {
+            height: 50px;
+            margin-right: 10px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .container {
+            margin: 30px auto;
+            max-width: 600px;
+            background: rgba(0,0,0,0.6);
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        h2 {
+            color: #fff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            color: #fff;
+        }
+    </style>
+    </head>
 <body>
 <header class="dashboard-header">
     <div class="header-left">
@@ -143,12 +205,12 @@ if ($result) {
         </div>
 
         <div class="form-group">
-            <label for="course_id">Course:</label>
-            <select name="course_id" id="course_id" class="form-select" required>
-                <option value="">Select Course</option>
-                <?php foreach ($courses as $course): ?>
-                    <option value="<?= htmlspecialchars($course['id']) ?>">
-                        <?= htmlspecialchars($course['course_name']) ?>
+            <label for="subject_id">Subject:</label>
+            <select name="subject_id" id="subject_id" class="form-select" required>
+                <option value="">Select Subject</option>
+                <?php foreach ($subjects as $subject): ?>
+                    <option value="<?= htmlspecialchars($subject['id']) ?>">
+                        <?= htmlspecialchars($subject['subject_code'] . ' - ' . $subject['subject_name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -156,16 +218,16 @@ if ($result) {
 
         <div class="form-group">
             <label for="date">Date:</label>
-            <input type="date" name="date" id="date" class="form-control" required 
+            <input type="date" name="date" id="date" class="form-control" required
                    value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="form-group">
             <label for="status">Status:</label>
             <select name="status" id="status" class="form-select" required>
-                <option value="Present">Present</option>
-                <option value="Absent">Absent</option>
-                <option value="Late">Late</option>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="late">Late</option>
             </select>
         </div>
 

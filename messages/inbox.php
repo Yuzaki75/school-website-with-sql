@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +19,23 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
+// Fetch inbox messages
+$result = $conn->query("SELECT m.id, m.subject, m.created_at, m.is_read, u.username as sender FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.receiver_id = $user_id ORDER BY m.created_at DESC");
+
+$message = '';
+if (isset($_GET['success'])) {
+    $message = '<div class="alert alert-success">' . htmlspecialchars($_GET['success']) . '</div>';
+} elseif (isset($_GET['error'])) {
+    $message = '<div class="alert alert-danger">' . htmlspecialchars($_GET['error']) . '</div>';
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>Inbox</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -85,7 +85,7 @@ while ($row = $result->fetch_assoc()) {
         }
         .container {
             margin: 30px auto;
-            max-width: 900px;
+            max-width: 1200px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -118,41 +118,44 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Inbox</h1>
+        <div>
+            <a href="send_message.php" class="btn btn-primary">Send Message</a>
+            <a href="sent.php" class="btn btn-secondary">Sent Messages</a>
+        </div>
+    </div>
+    <?= $message ?>
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>From</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td><?= htmlspecialchars($row['sender']) ?></td>
+                <td><?= htmlspecialchars($row['subject']) ?></td>
+                <td><?= htmlspecialchars($row['created_at']) ?></td>
+                <td><?= $row['is_read'] ? 'Read' : 'Unread' ?></td>
+                <td>
+                    <a href="view_message.php?id=<?= urlencode($row['id']) ?>" class="btn btn-primary btn-sm">View</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

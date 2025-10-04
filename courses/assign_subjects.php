@@ -2,8 +2,8 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-// Check if user is logged in and is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+// Check if user is logged in and is admin or teacher
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'teacher'])) {
     header("Location: ../login.php");
     exit();
 }
@@ -11,63 +11,63 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 $error = '';
 $success = '';
 
-// Get student id from query param
-$student_id = $_GET['id'] ?? 0;
-$student_id = (int)$student_id;
+// Get course id from query param
+$course_id = $_GET['id'] ?? 0;
+$course_id = (int)$course_id;
 
-// Fetch student info
-$stmt = $conn->prepare("SELECT id, username FROM users WHERE id=? AND role='student'");
-$stmt->bind_param("i", $student_id);
+// Fetch course info
+$stmt = $conn->prepare("SELECT id, course_name FROM courses WHERE id=?");
+$stmt->bind_param("i", $course_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$student = $result->fetch_assoc();
+$course = $result->fetch_assoc();
 $stmt->close();
 
-if (!$student) {
-    header("Location: manage_users.php");
+if (!$course) {
+    header("Location: courses.php");
     exit();
 }
 
-// Fetch all courses
-$courses_result = $conn->query("SELECT * FROM courses ORDER BY course_name ASC");
-$all_courses = [];
-while ($row = $courses_result->fetch_assoc()) {
-    $all_courses[] = $row;
+// Fetch all subjects
+$subjects_result = $conn->query("SELECT * FROM subjects ORDER BY subject_name ASC");
+$all_subjects = [];
+while ($row = $subjects_result->fetch_assoc()) {
+    $all_subjects[] = $row;
 }
 
-// Fetch courses assigned to this student
-$student_courses_result = $conn->prepare("SELECT course_id FROM enrollments WHERE student_id = ?");
-$student_courses_result->bind_param("i", $student_id);
-$student_courses_result->execute();
-$student_courses_result->bind_result($course_id);
-$assigned_courses = [];
-while ($student_courses_result->fetch()) {
-    $assigned_courses[] = $course_id;
+// Fetch subjects assigned to this course
+$course_subjects_result = $conn->prepare("SELECT subject_id FROM course_subjects WHERE course_id = ?");
+$course_subjects_result->bind_param("i", $course_id);
+$course_subjects_result->execute();
+$course_subjects_result->bind_result($subject_id);
+$assigned_subjects = [];
+while ($course_subjects_result->fetch()) {
+    $assigned_subjects[] = $subject_id;
 }
-$student_courses_result->close();
+$course_subjects_result->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selected_courses = $_POST['courses'] ?? [];
+    $selected_subjects = $_POST['subjects'] ?? [];
 
-    // Delete old enrollments
-    $stmt_del = $conn->prepare("DELETE FROM enrollments WHERE student_id=?");
-    $stmt_del->bind_param("i", $student_id);
+    // Delete old assignments
+    $stmt_del = $conn->prepare("DELETE FROM course_subjects WHERE course_id=?");
+    $stmt_del->bind_param("i", $course_id);
     $stmt_del->execute();
 
-    // Insert new enrollments
-    if (!empty($selected_courses)) {
-        $stmt_ins = $conn->prepare("INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)");
-        foreach ($selected_courses as $course_id) {
-            $course_id = (int)$course_id;
-            $stmt_ins->bind_param("ii", $student_id, $course_id);
+    // Insert new assignments
+    if (!empty($selected_subjects)) {
+        $stmt_ins = $conn->prepare("INSERT INTO course_subjects (course_id, subject_id) VALUES (?, ?)");
+        foreach ($selected_subjects as $subject_id) {
+            $subject_id = (int)$subject_id;
+            $stmt_ins->bind_param("ii", $course_id, $subject_id);
             $stmt_ins->execute();
         }
         $stmt_ins->close();
     }
 
-    $success = "Courses updated successfully.";
-    // Refresh assigned courses
-    $assigned_courses = $selected_courses;
+    $success = "Subjects updated successfully.";
+    // Refresh assigned subjects
+    $assigned_subjects = $selected_subjects;
 }
 
 $user_id = $_SESSION['user_id'];
@@ -91,7 +91,7 @@ if (empty($profile_pic_db)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Assign Courses to Student</title>
+    <title>Assign Subjects to Course</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -189,12 +189,12 @@ if (empty($profile_pic_db)) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="manage_students.php" class="back-link">Back</a>
+        <a href="courses.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h2>Assign Courses to Student: <?= htmlspecialchars($student['username']) ?></h2>
+    <h2>Assign Subjects to Course: <?= htmlspecialchars($course['course_name']) ?></h2>
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
@@ -202,15 +202,15 @@ if (empty($profile_pic_db)) {
         <div class="success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
     <form method="post" novalidate>
-        <label for="courses">Select Courses:</label>
-        <select id="courses" name="courses[]" multiple>
-            <?php foreach ($all_courses as $course): ?>
-                <option value="<?= $course['id'] ?>" <?= in_array($course['id'], $assigned_courses) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($course['course_name']) ?>
+        <label for="subjects">Select Subjects:</label>
+        <select id="subjects" name="subjects[]" multiple>
+            <?php foreach ($all_subjects as $subject): ?>
+                <option value="<?= $subject['id'] ?>" <?= in_array($subject['id'], $assigned_subjects) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($subject['subject_code'] . ' - ' . $subject['subject_name']) ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <button type="submit">Update Courses</button>
+        <button type="submit">Update Subjects</button>
     </form>
 </div>
 </body>

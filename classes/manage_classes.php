@@ -1,16 +1,25 @@
 <?php
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'];
 
-// fetch profile picture fresh from DB
+// Only admin and teacher can manage classes
+if (!in_array($role, ['admin', 'teacher'])) {
+    header("Location: ../login.php");
+    exit();
+}
+
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +27,18 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = !empty($profile_pic_db)
+    ? '../uploads/profile/' . basename($profile_pic_db)
+    : '../uploads/profile/default.png';
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
-}
+// Fetch courses
+$result = $conn->query("SELECT * FROM courses");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>Manage Classes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -105,6 +108,13 @@ while ($row = $result->fetch_assoc()) {
             margin-right: 5px;
         }
     </style>
+    <script>
+        function confirmDelete(courseId) {
+            if (confirm("Are you sure you want to delete this course?")) {
+                window.location.href = "../courses/drop_course.php?id=" + courseId;
+            }
+        }
+    </script>
 </head>
 <body>
 <header class="dashboard-header">
@@ -118,41 +128,54 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
+    <h1>Manage Classes</h1>
+    <a href="../courses/add_course.php" class="btn btn-success mb-3">➕ Add New Course</a>
+    <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
+                    <th>Course Name</th>
+                    <th>Description</th>
+                    <th>Subjects</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($userList as $user): ?>
+            <?php while ($row = $result->fetch_assoc()): ?>
                 <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
+                    <td><?= htmlspecialchars($row['id']) ?></td>
+                    <td><?= htmlspecialchars($row['course_name']) ?></td>
+                    <td><?= htmlspecialchars($row['description'] ?? '') ?></td>
                     <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
+                        <?php
+                        $course_id = $row['id'];
+                        $stmt_subj = $conn->prepare("SELECT s.subject_code, s.subject_name FROM subjects s JOIN course_subjects cs ON s.id = cs.subject_id WHERE cs.course_id = ?");
+                        $stmt_subj->bind_param("i", $course_id);
+                        $stmt_subj->execute();
+                        $result_subj = $stmt_subj->get_result();
+                        $subjects = [];
+                        while ($subj = $result_subj->fetch_assoc()) {
+                            $subjects[] = htmlspecialchars($subj['subject_code'] . ' - ' . $subj['subject_name']);
+                        }
+                        $stmt_subj->close();
+                        echo implode("<br>", $subjects);
+                        ?>
+                    </td>
+                    <td>
+                        <a href="../courses/edit_course.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-primary">✏️ Edit</a>
+                        <a href="../courses/assign_subjects.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-secondary">📚 Assign Subjects</a>
+                        <button onclick="confirmDelete(<?= htmlspecialchars($row['id']) ?>)" class="btn btn-sm btn-danger">❌ Delete</button>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endwhile; ?>
             </tbody>
         </table>
-    <?php endforeach; ?>
+    </div>
 </div>
 </body>
 </html>

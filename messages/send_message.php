@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +19,36 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
+
+$message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $receiver_id = (int)$_POST['receiver_id'];
+    $subject = trim($_POST['subject']);
+    $msg = trim($_POST['message']);
+
+    if ($receiver_id && $subject && $msg) {
+        $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, subject, message) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("iiss", $user_id, $receiver_id, $subject, $msg);
+        if ($stmt->execute()) {
+            $message = '<div class="alert alert-success">Message sent successfully!</div>';
+        } else {
+            $message = '<div class="alert alert-danger">Error sending message.</div>';
+        }
+        $stmt->close();
+    } else {
+        $message = '<div class="alert alert-danger">All fields are required.</div>';
+    }
 }
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
-}
+// Fetch all users except self for receiver
+$users_result = $conn->query("SELECT id, username, full_name FROM users WHERE id != $user_id ORDER BY username");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>Send Message</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -85,7 +98,7 @@ while ($row = $result->fetch_assoc()) {
         }
         .container {
             margin: 30px auto;
-            max-width: 900px;
+            max-width: 600px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -93,16 +106,6 @@ while ($row = $result->fetch_assoc()) {
         }
         h1 {
             margin-bottom: 20px;
-        }
-        .table thead {
-            background-color: #343a40;
-            color: #fff;
-        }
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        .btn-sm {
-            margin-right: 5px;
         }
     </style>
 </head>
@@ -118,41 +121,35 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <h1>Send Message</h1>
+    <?= $message ?>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label text-white">To</label>
+            <select name="receiver_id" class="form-select" required>
+                <option value="">Select Receiver</option>
+                <?php while ($user = $users_result->fetch_assoc()): ?>
+                    <option value="<?= $user['id'] ?>"><?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['full_name']) ?>)</option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Subject</label>
+            <input type="text" name="subject" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Message</label>
+            <textarea name="message" class="form-control" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+        <a href="inbox.php" class="btn btn-secondary">Back to Inbox</a>
+    </form>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

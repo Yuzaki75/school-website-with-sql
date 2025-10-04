@@ -151,7 +151,7 @@ $profilePic = !empty($profile_pic_db)
                 <tr>
                     <th>ID</th>
                     <th>Course Name</th>
-                    <th>Description</th>
+                    <th>Subjects</th>
                     <?php if (in_array($role, ['admin', 'teacher'])): ?>
                     <th>Actions</th>
                     <?php endif; ?>
@@ -162,10 +162,25 @@ $profilePic = !empty($profile_pic_db)
                 <tr>
                     <td><?= htmlspecialchars($row['id']) ?></td>
                     <td><?= htmlspecialchars($row['course_name']) ?></td>
-                    <td><?= htmlspecialchars($row['description'] ?? '') ?></td>
+                    <td>
+                        <?php
+                        $course_id = $row['id'];
+                        $stmt_subj = $conn->prepare("SELECT s.subject_code, s.subject_name FROM subjects s JOIN course_subjects cs ON s.id = cs.subject_id WHERE cs.course_id = ?");
+                        $stmt_subj->bind_param("i", $course_id);
+                        $stmt_subj->execute();
+                        $result_subj = $stmt_subj->get_result();
+                        $subjects = [];
+                        while ($subj = $result_subj->fetch_assoc()) {
+                            $subjects[] = htmlspecialchars($subj['subject_code'] . ' - ' . $subj['subject_name']);
+                        }
+                        $stmt_subj->close();
+                        echo implode("<br>", $subjects);
+                        ?>
+                    </td>
                     <?php if (in_array($role, ['admin', 'teacher'])): ?>
                     <td>
                         <a href="edit_course.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-primary">✏️ Edit</a>
+                        <a href="assign_subjects.php?id=<?= urlencode($row['id']) ?>" class="btn btn-sm btn-secondary">📚 Assign Subjects</a>
                         <button onclick="confirmDelete(<?= htmlspecialchars($row['id']) ?>)" class="btn btn-sm btn-danger">❌ Delete</button>
                     </td>
                     <?php endif; ?>

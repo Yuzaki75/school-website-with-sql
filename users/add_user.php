@@ -1,6 +1,29 @@
 <?php
 // users/add_user.php
+session_start();
 include __DIR__ . '/../config/db.php';
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$username = $_SESSION['username'];
+
+// fetch profile picture fresh from DB
+$stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($profile_pic_db);
+$stmt->fetch();
+$stmt->close();
+
+if (empty($profile_pic_db)) {
+    $profilePic = '../uploads/profile/default.png';
+} else {
+    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
+}
 
 $message = '';
 
@@ -22,7 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt) {
             $stmt->bind_param("sssss", $username, $hashedPassword, $full_name, $email, $role);
             if ($stmt->execute()) {
-                $message = '<div class="alert alert-success text-center">User added successfully!</div>';
+                header("Location: manage_users.php");
+                exit();
             } else {
                 $message = '<div class="alert alert-danger text-center">Error adding user: '.$stmt->error.'</div>';
             }
@@ -41,6 +65,7 @@ $conn->close();
   <title>Add User</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/style.css">
   <style>
     /* Same blurred background as dashboards */
     body {
@@ -63,6 +88,32 @@ $conn->close();
       background-color: rgba(0, 0, 0, 0.3);
       z-index: -1;
     }
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 30px;
+        background: rgba(0,0,0,0.8);
+    }
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+    .school-logo {
+        height: 50px;
+        margin-right: 10px;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .profile-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 
     .manage-box {
       background-color: rgba(0, 0, 0, 0.6);
@@ -81,14 +132,18 @@ $conn->close();
 <body>
 
 <header class="dashboard-header">
-  <div class="header-left">
-    <img src="../uploads/logo.png" class="school-logo" alt="logo">
-    <span class="school-name">Dominican College of Santa Rosa</span>
-  </div>
-  <div class="header-right">
-    <span class="username">Add User</span>
-    <a href="manage_users.php" class="profile-link">Back</a>
-  </div>
+    <div class="header-left">
+        <img src="../uploads/logo.png" alt="School Logo" class="school-logo" />
+        <span class="school-name">Dominican College of Santa Rosa</span>
+    </div>
+    <div class="header-right">
+        <span class="username">Hello, <?= htmlspecialchars($username) ?></span>
+        <a href="../profile/view_profile.php">
+            <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
+        </a>
+        <a href="../logout.php" class="logout-link">Logout</a>
+        <a href="manage_users.php" class="back-link">Back</a>
+    </div>
 </header>
 
 <div class="container py-4">

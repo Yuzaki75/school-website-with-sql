@@ -145,6 +145,7 @@ if (empty($profile_pic_db)) {
                 <div class="card"><a href="grades/grades.php">Manage Grades</a></div>
                 <div class="card"><a href="attendance/attendance.php">Manage Attendance</a></div>
                 <div class="card"><a href="assignments/assignments.php">Assignments</a></div>
+                <div class="card"><a href="profile/edit_profile.php">Edit Profile</a></div>
             </div>
     </div>
 

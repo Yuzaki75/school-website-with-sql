@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +19,33 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
+if (isset($_GET['id'])) {
+    $message_id = (int)$_GET['id'];
+
+    // Fetch message
+    $stmt = $conn->prepare("SELECT m.subject, m.message, m.created_at, u.username as receiver FROM messages m JOIN users u ON m.receiver_id = u.id WHERE m.id = ? AND m.sender_id = ?");
+    $stmt->bind_param("ii", $message_id, $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $msg = $result->fetch_assoc();
+    } else {
+        header("Location: sent.php?error=Message not found");
+        exit();
+    }
+    $stmt->close();
+} else {
+    header("Location: sent.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>View Sent Message</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -85,7 +95,7 @@ while ($row = $result->fetch_assoc()) {
         }
         .container {
             margin: 30px auto;
-            max-width: 900px;
+            max-width: 800px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -93,16 +103,6 @@ while ($row = $result->fetch_assoc()) {
         }
         h1 {
             margin-bottom: 20px;
-        }
-        .table thead {
-            background-color: #343a40;
-            color: #fff;
-        }
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        .btn-sm {
-            margin-right: 5px;
         }
     </style>
 </head>
@@ -118,41 +118,24 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <h1>Sent Message</h1>
+    <div class="card bg-dark text-white">
+        <div class="card-header">
+            <strong>To:</strong> <?= htmlspecialchars($msg['receiver']) ?><br>
+            <strong>Subject:</strong> <?= htmlspecialchars($msg['subject']) ?><br>
+            <strong>Date:</strong> <?= htmlspecialchars($msg['created_at']) ?>
+        </div>
+        <div class="card-body">
+            <p><?= nl2br(htmlspecialchars($msg['message'])) ?></p>
+        </div>
+    </div>
+    <a href="sent.php" class="btn btn-secondary mt-3">Back to Sent</a>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

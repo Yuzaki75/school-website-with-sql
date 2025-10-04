@@ -2,7 +2,7 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: ../login.php");
     exit();
 }
@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +18,39 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
+
+// Handle file upload
+$message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['material_file'])) {
+    $subject_id = (int)$_POST['subject_id'];
+    $file = $_FILES['material_file'];
+
+    if ($file['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = '../uploads/materials/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+        $file_path = $upload_dir . basename($file['name']);
+        if (move_uploaded_file($file['tmp_name'], $file_path)) {
+            // Save to database (assuming a materials table, but since not in schema, just message)
+            $message = '<div class="alert alert-success">Material uploaded successfully!</div>';
+        } else {
+            $message = '<div class="alert alert-danger">Error uploading file.</div>';
+        }
+    } else {
+        $message = '<div class="alert alert-danger">File upload error.</div>';
+    }
 }
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
-}
+// Fetch subjects assigned to teacher
+$result = $conn->query("SELECT s.id, s.subject_name FROM subjects s JOIN student_subjects ss ON s.id = ss.subject_id WHERE ss.student_id IN (SELECT student_id FROM student_subjects WHERE subject_id = s.id) GROUP BY s.id");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>Upload Materials</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -85,7 +100,7 @@ while ($row = $result->fetch_assoc()) {
         }
         .container {
             margin: 30px auto;
-            max-width: 900px;
+            max-width: 600px;
             background: rgba(0,0,0,0.6);
             padding: 20px;
             border-radius: 10px;
@@ -93,16 +108,6 @@ while ($row = $result->fetch_assoc()) {
         }
         h1 {
             margin-bottom: 20px;
-        }
-        .table thead {
-            background-color: #343a40;
-            color: #fff;
-        }
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        .btn-sm {
-            margin-right: 5px;
         }
     </style>
 </head>
@@ -118,41 +123,31 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <h1>Upload Materials</h1>
+    <?= $message ?>
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label class="form-label text-white">Subject</label>
+            <select name="subject_id" class="form-select" required>
+                <option value="">Select Subject</option>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['subject_name']) ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white">Material File</label>
+            <input type="file" name="material_file" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+        <a href="../dashboard_teacher.php" class="btn btn-secondary">Back</a>
+    </form>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

@@ -33,7 +33,73 @@ $profilePic = !empty($profile_pic_db)
     <title>Attendance Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/attendance.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('../uploads/background.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+            min-height: 100vh;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            backdrop-filter: blur(6px);
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.8);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .school-logo {
+            height: 50px;
+            margin-right: 10px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .container {
+            margin: 30px auto;
+            max-width: 900px;
+            background: rgba(0,0,0,0.6);
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        h2, h3 {
+            color: #fff;
+        }
+        .table thead {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .card {
+            background: rgba(0,0,0,0.6) !important;
+        }
+    </style>
     </head>
 <body>
 <header class="dashboard-header">
@@ -59,10 +125,11 @@ $profilePic = !empty($profile_pic_db)
         <h3 class="mb-3">Your Attendance Records</h3>
         <?php
         $stmt = $conn->prepare("
-            SELECT a.date, a.status, c.course_name 
+            SELECT a.date, a.status, s.subject_name, c.course_name
             FROM attendance a
-            JOIN courses c ON a.course_id = c.id
-            WHERE a.student_id = ? 
+            JOIN subjects s ON a.subject_id = s.id
+            JOIN courses c ON s.course_id = c.id
+            WHERE a.student_id = ?
             ORDER BY a.date DESC
         ");
         $stmt->bind_param("i", $user_id);

@@ -47,6 +47,10 @@ if (empty($profile_pic_db)) {
             <div class="card"><a href="grades/grades.php">My Grades</a></div>
             <div class="card"><a href="assignments/assignments.php">Assignments</a></div>
             <div class="card"><a href="attendance/attendance_report.php">My Attendance</a></div>
+            <div class="card"><a href="messages/inbox.php">Messages</a></div>
+            <div class="card"><a href="announcements/announcements.php">Announcements</a></div>
+            <div class="card"><a href="library/library.php">Library</a></div>
+            <div class="card"><a href="profile/edit_profile.php">Edit Profile</a></div>
         </div>
 
         <h3>Your Assigned Subjects</h3>

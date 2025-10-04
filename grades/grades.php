@@ -12,18 +12,18 @@ $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'] ?? '';
 
 if ($role === 'student') {
-    $stmt = $conn->prepare("SELECT g.id, c.course_name, s.subject_name, g.grade 
+    $stmt = $conn->prepare("SELECT g.id, c.course_name, s.subject_name, g.grade
                             FROM grades g
                             JOIN subjects s ON g.subject_id = s.id
-                            JOIN courses c ON s.course_id = c.id
+                            LEFT JOIN courses c ON s.course_id = c.id
                             WHERE g.student_id = ?");
     $stmt->bind_param("i", $user_id);
 } else {
-    $stmt = $conn->prepare("SELECT g.id, u.full_name, c.course_name, s.subject_name, g.grade 
+    $stmt = $conn->prepare("SELECT g.id, u.full_name, c.course_name, s.subject_name, g.grade
                             FROM grades g
                             JOIN users u ON g.student_id = u.id
                             JOIN subjects s ON g.subject_id = s.id
-                            JOIN courses c ON s.course_id = c.id");
+                            LEFT JOIN courses c ON s.course_id = c.id");
 }
 
 $stmt->execute();
@@ -127,6 +127,16 @@ if (empty($profile_pic_db)) {
         .btn {
             margin-right: 5px;
         }
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -145,7 +155,21 @@ if (empty($profile_pic_db)) {
 </header>
 
 <div class="container">
-    <h2>Grades</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Grades</h2>
+        <?php
+        $back_url = '';
+        if ($role === 'student') {
+            $back_url = '../dashboard_student.php';
+        } elseif ($role === 'teacher') {
+            $back_url = '../dashboard_teacher.php';
+        } elseif ($role === 'admin') {
+            $back_url = '../admin_dashboard.php';
+        }
+        if ($back_url): ?>
+            <a href="<?= $back_url ?>" class="btn btn-outline-light">&larr; Back to Dashboard</a>
+        <?php endif; ?>
+    </div>
     <?php if (empty($grades)): ?>
         <p>No grades found.</p>
     <?php else: ?>
@@ -184,5 +208,7 @@ if (empty($profile_pic_db)) {
         </table>
     <?php endif; ?>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>

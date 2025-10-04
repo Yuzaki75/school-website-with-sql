@@ -146,6 +146,7 @@ if (empty($profile_pic_db)) {
 
                 <!-- Add Section -->
                 <div class="card"><a href="grades/add_grade.php">Add Grade</a></div>
+                <div class="card"><a href="profile/edit_profile.php">Edit Profile</a></div>
             </div>
 </div>
 

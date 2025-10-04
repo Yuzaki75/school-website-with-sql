@@ -2,15 +2,16 @@
 session_start();
 include __DIR__ . '/../config/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
+$role = $_SESSION['role'] ?? '';
 
-// fetch profile picture fresh from DB
+// Fetch profile picture
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id=?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -18,24 +19,18 @@ $stmt->bind_result($profile_pic_db);
 $stmt->fetch();
 $stmt->close();
 
-if (empty($profile_pic_db)) {
-    $profilePic = '../uploads/profile/default.png';
-} else {
-    $profilePic = '../uploads/profile/' . basename($profile_pic_db);
-}
+$profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch all users
-$result = $conn->query("SELECT id, username, role FROM users ORDER BY role ASC, username ASC");
-$users = [];
-while ($row = $result->fetch_assoc()) {
-    $users[$row['role']][] = $row;
-}
+// Get some stats
+$total_books = $conn->query("SELECT COUNT(*) as count FROM books")->fetch_assoc()['count'];
+$available_books = $conn->query("SELECT SUM(available_copies) as count FROM books")->fetch_assoc()['count'];
+$user_borrows = $conn->query("SELECT COUNT(*) as count FROM borrow_records WHERE borrower_id = $user_id AND status = 'borrowed'")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Manage Users</title>
+    <title>Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="stylesheet" href="../css/dashboard.css" />
@@ -91,18 +86,42 @@ while ($row = $result->fetch_assoc()) {
             border-radius: 10px;
             color: #fff;
         }
-        h1 {
-            margin-bottom: 20px;
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
         }
-        .table thead {
-            background-color: #343a40;
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stat-card h3 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .stat-card p {
+            margin: 5px 0 0;
+        }
+        .actions {
+            text-align: center;
+        }
+        .actions .btn {
+            margin: 10px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
             color: #fff;
-        }
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        .btn-sm {
-            margin-right: 5px;
+            text-align: center;
+            padding: 10px;
+            z-index: 10;
         }
     </style>
 </head>
@@ -118,41 +137,49 @@ while ($row = $result->fetch_assoc()) {
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="Profile" class="profile-avatar" />
         </a>
         <a href="../logout.php" class="logout-link">Logout</a>
-        <a href="../admin_dashboard.php" class="back-link">Back</a>
     </div>
 </header>
 
 <div class="container">
-    <h1>Manage Users</h1>
-    <a href="add_user.php" class="btn btn-success mb-3">Add New User</a>
-    <?php foreach ($users as $role => $userList): ?>
-        <h2><?= ucfirst($role) ?>s</h2>
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($userList as $user): ?>
-                <tr>
-                    <td><?= htmlspecialchars($user['id']) ?></td>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td>
-                        <?php if ($user['id'] != $user_id): ?>
-                        <a href="edit_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="delete_user.php?id=<?= urlencode($user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endforeach; ?>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Library</h1>
+        <?php
+        $back_url = '';
+        if ($role === 'admin') {
+            $back_url = '../admin_dashboard.php';
+        } elseif ($role === 'teacher') {
+            $back_url = '../dashboard_teacher.php';
+        } elseif ($role === 'student') {
+            $back_url = '../dashboard_student.php';
+        }
+        ?>
+        <a href="<?= $back_url ?>" class="btn btn-outline-light">Back to Dashboard</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3><?= $total_books ?></h3>
+            <p>Total Books</p>
+        </div>
+        <div class="stat-card">
+            <h3><?= $available_books ?></h3>
+            <p>Available Books</p>
+        </div>
+        <div class="stat-card">
+            <h3><?= $user_borrows ?></h3>
+            <p>My Borrowed Books</p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="books.php" class="btn btn-primary">Browse Books</a>
+        <a href="my_borrows.php" class="btn btn-secondary">My Borrows</a>
+        <?php if ($role === 'admin' || $role === 'teacher'): ?>
+            <a href="add_book.php" class="btn btn-success">Add Book</a>
+        <?php endif; ?>
+    </div>
 </div>
+
+<?php include '../includes/footer.php'; ?>
 </body>
 </html>
