@@ -1,4 +1,5 @@
 <?php
+// library/borrow_book.php
 session_start();
 include __DIR__ . '/../config/db.php';
 
@@ -13,44 +14,51 @@ $username = $_SESSION['username'];
 $message = '';
 
 if (isset($_GET['id'])) {
-    $book_id = (int)$_GET['id'];
+    $book_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
-    // Check if book exists and has available copies
-    $stmt = $conn->prepare("SELECT book_title, available_copies FROM books WHERE id = ?");
-    $stmt->bind_param("i", $book_id);
-    $stmt->execute();
-    $stmt->bind_result($book_title, $available_copies);
-    $stmt->fetch();
-    $stmt->close();
-
-    if ($book_title && $available_copies > 0) {
-        // Check if user already borrowed this book and not returned
-        $stmt = $conn->prepare("SELECT id FROM borrow_records WHERE book_id = ? AND borrower_id = ? AND status = 'borrowed'");
-        $stmt->bind_param("ii", $book_id, $user_id);
+    if ($book_id) {
+        // Check if book exists and has available copies using prepared statement
+        $stmt = $conn->prepare("SELECT book_title, available_copies FROM library_books WHERE id = ?");
+        $stmt->bind_param("i", $book_id);
         $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $message = '<div class="alert alert-warning">You have already borrowed this book and not returned it yet.</div>';
-        } else {
-            // Borrow the book
-            $borrow_date = date('Y-m-d');
-            $due_date = date('Y-m-d', strtotime('+14 days')); // 14 days due
-            $status = 'borrowed';
-            $issued_by = $user_id; // For simplicity, issued by self
+        $stmt->bind_result($book_title, $available_copies);
+        $stmt->fetch();
+        $stmt->close();
 
-            $stmt = $conn->prepare("INSERT INTO borrow_records (book_id, borrower_id, borrow_date, due_date, status, issued_by) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("iisssi", $book_id, $user_id, $borrow_date, $due_date, $status, $issued_by);
-            if ($stmt->execute()) {
-                // Update available copies
-                $conn->query("UPDATE books SET available_copies = available_copies - 1 WHERE id = $book_id");
-                $message = '<div class="alert alert-success">Book borrowed successfully! Due date: ' . $due_date . '</div>';
+        if ($book_title && $available_copies > 0) {
+            // Check if user already borrowed this book and not returned
+            $stmt = $conn->prepare("SELECT id FROM book_borrowings WHERE book_id = ? AND borrower_id = ? AND status = 'borrowed'");
+            $stmt->bind_param("ii", $book_id, $user_id);
+            $stmt->execute();
+            $stmt->store_result();
+            if ($stmt->num_rows > 0) {
+                $message = '<div class="alert alert-warning">You have already borrowed this book and not returned it yet.</div>';
             } else {
-                $message = '<div class="alert alert-danger">Error borrowing book: ' . htmlspecialchars($stmt->error) . '</div>';
+                // Borrow the book
+                $borrow_date = date('Y-m-d');
+                $due_date = date('Y-m-d', strtotime('+14 days')); // 14 days due
+                $status = 'borrowed';
+                $issued_by = $user_id; // For simplicity, issued by self
+
+                $stmt = $conn->prepare("INSERT INTO book_borrowings (book_id, borrower_id, borrow_date, due_date, status, issued_by) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("iisssi", $book_id, $user_id, $borrow_date, $due_date, $status, $issued_by);
+                if ($stmt->execute()) {
+                    // Update available copies using prepared statement
+                    $stmt = $conn->prepare("UPDATE library_books SET available_copies = available_copies - 1 WHERE id = ?");
+                    $stmt->bind_param("i", $book_id);
+                    $stmt->execute();
+                    $stmt->close();
+                    $message = '<div class="alert alert-success">Book borrowed successfully! Due date: ' . htmlspecialchars($due_date) . '</div>';
+                } else {
+                    $message = '<div class="alert alert-danger">Error borrowing book: ' . htmlspecialchars($stmt->error) . '</div>';
+                }
+                $stmt->close();
             }
-            $stmt->close();
+        } else {
+            $message = '<div class="alert alert-danger">Book not available or does not exist.</div>';
         }
     } else {
-        $message = '<div class="alert alert-danger">Book not available or does not exist.</div>';
+        $message = '<div class="alert alert-danger">Invalid book ID.</div>';
     }
 } else {
     $message = '<div class="alert alert-danger">Invalid book ID.</div>';

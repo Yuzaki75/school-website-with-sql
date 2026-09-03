@@ -1,4 +1,5 @@
 <?php
+// messages/inbox.php
 session_start();
 include __DIR__ . '/../config/db.php';
 
@@ -21,8 +22,11 @@ $stmt->close();
 
 $profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../uploads/profile/' . basename($profile_pic_db);
 
-// Fetch inbox messages
-$result = $conn->query("SELECT m.id, m.subject, m.created_at, m.is_read, u.username as sender FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.receiver_id = $user_id ORDER BY m.created_at DESC");
+// Fetch inbox messages using prepared statement
+$stmt = $conn->prepare("SELECT m.id, m.subject, m.created_at, m.is_read, u.username as sender FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.receiver_id = ? ORDER BY m.created_at DESC");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $message = '';
 if (isset($_GET['success'])) {
