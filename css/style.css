@@ -1,13 +1,23 @@
 /* Global styles specific to layout and header */
+/* Black & Yellow Academic Theme - Dominican College */
+
+:root {
+  --primary-black: #0B0B0B;
+  --deep-black: #050505;
+  --primary-yellow: #F4C400;
+  --bright-yellow: #FFD21F;
+  --white: #FFFFFF;
+  --off-white: #F7F7F5;
+}
 
 .landing-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-  border-bottom: 2px solid orange;
+  background-color: var(--primary-black);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  border-bottom: 3px solid var(--primary-yellow);
   position: relative;
   z-index: 2;
 }
@@ -15,7 +25,7 @@
 .header-left {
   display: flex;
   align-items: center;
-  color: #fff;
+  color: var(--white);
 }
 
 .header-left .school-logo {
@@ -23,58 +33,69 @@
   height: auto;
   margin-right: 15px;
   border-radius: 50%;
+  border: 2px solid var(--primary-yellow);
 }
 
 .header-left .school-name {
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.5px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .header-right .login-btn {
   padding: 10px 20px;
-  font-size: 16px;
-  background-color: black;
-  color: orange;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background-color: var(--primary-yellow);
+  color: var(--primary-black);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
   text-decoration: none;
 }
 
 .header-right .login-btn:hover {
-  background-color: orange;
-  color: black;
+  background-color: var(--bright-yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 196, 0, 0.3);
 }
 
 /* Burger button */
 .burger {
-  font-size: 26px;
+  font-size: 28px;
   background: none;
   border: none;
-  color:orange;
+  color: var(--primary-yellow);
   cursor: pointer;
   line-height: 1;
+  padding: 5px;
+  transition: color 0.2s ease;
+}
+
+.burger:hover {
+  color: var(--bright-yellow);
 }
 
 /* Side Menu */
 .side-menu {
   position: fixed;
   top: 0;
-  right: -260px;
-  width: 260px;
+  right: -280px;
+  width: 280px;
   height: 100%;
-  background-color: orange;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, var(--primary-black) 0%, var(--deep-black) 100%);
+  box-shadow: -5px 0 15px rgba(0,0,0,0.5);
   transition: right 0.3s ease;
   z-index: 999;
+  border-left: 2px solid var(--primary-yellow);
 }
 
 .side-menu.open {
@@ -89,34 +110,39 @@
 
 .side-menu ul li a {
   display: block;
-  padding: 15px 20px;
-  font-weight: bold;
-  color: black;
+  padding: 16px 24px;
+  font-weight: 600;
+  color: var(--white);
   text-decoration: none;
-  border-bottom: 1px solid rgba(0,0,0,0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
 }
 
 .side-menu ul li a:hover {
-  background-color: orange;
+  background-color: rgba(244, 196, 0, 0.1);
+  color: var(--primary-yellow);
+  padding-left: 28px;
 }
 
 /* Close button */
 .close-btn {
   width: 100%;
-  padding: 15px 20px;
-  background: black;
-  color: orange;
+  padding: 16px 24px;
+  background: var(--primary-yellow);
+  color: var(--primary-black);
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 700;
   text-align: center;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: all 0.2s ease;
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 
 .close-btn:hover {
-  background: orange;
-  color: black;
+  background: var(--bright-yellow);
 }
 
 /* Short content */

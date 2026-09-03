@@ -1,111 +1,304 @@
 /* Common styles shared across the project */
+/* Black & Yellow Academic Theme - Dominican College */
+
+:root {
+  /* Brand Colors */
+  --primary-black: #0B0B0B;
+  --deep-black: #050505;
+  --primary-yellow: #F4C400;
+  --bright-yellow: #FFD21F;
+  
+  /* Neutrals */
+  --white: #FFFFFF;
+  --off-white: #F7F7F5;
+  --light-gray: #F0F0F0;
+  --medium-gray: #6B6B6B;
+  --dark-gray: #222222;
+  
+  /* Semantic Colors */
+  --success: #16A34A;
+  --warning: #F59E0B;
+  --error: #DC2626;
+  --info: #2563EB;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', 'Manrope', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
-  color: #fff;
-  background-color: #000; /* default background */
+  color: var(--white);
+  background-color: var(--deep-black);
+  line-height: 1.6;
 }
 
-h2, h3 {
-  color: #f0ad4e;
+/* Typography */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  color: var(--white);
+}
+
+h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
   text-align: center;
-  margin-top: 20px;
-  font-weight: bold;
+  margin: 2rem 0 1.5rem 0;
+  color: var(--primary-yellow);
 }
 
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  color: var(--primary-yellow);
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0;
+  color: var(--white);
+}
+
+p {
+  margin: 0 0 1rem 0;
+}
+
+/* Tables */
 table {
   width: 90%;
   margin: 20px auto;
   border-collapse: collapse;
-  background: rgba(0,0,0,0.7);
-  color: white;
+  background: var(--dark-gray);
+  color: var(--white);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(240, 173, 78, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(244, 196, 0, 0.3);
 }
 
 table th, table td {
   padding: 12px 15px;
-  border: 1px solid #f0ad4e;
+  border: 1px solid rgba(244, 196, 0, 0.4);
   text-align: left;
-  color: white;
+  color: var(--white);
 }
 
 table th {
-  background-color: rgba(240, 173, 78, 0.9);
-  font-weight: bold;
+  background-color: var(--primary-black);
+  color: var(--primary-yellow);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
 }
 
 table tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
+table tr:hover {
+  background-color: rgba(244, 196, 0, 0.1);
+}
+
+/* Forms */
 form {
   width: 90%;
   max-width: 600px;
   margin: 20px auto;
-  background: rgba(0,0,0,0.7);
-  padding: 20px;
-  border-radius: 10px;
-  color: white;
-  box-shadow: 0 0 15px rgba(240, 173, 78, 0.7);
+  background: var(--dark-gray);
+  padding: 30px;
+  border-radius: 12px;
+  color: var(--white);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(244, 196, 0, 0.2);
 }
 
 label {
   display: block;
   margin-bottom: 8px;
-  font-weight: bold;
-  color: #f0ad4e;
+  font-weight: 600;
+  color: var(--primary-yellow);
+  font-size: 0.9rem;
 }
 
 input[type="text"],
 input[type="password"],
 input[type="email"],
+input[type="number"],
 input[type="date"],
+input[type="datetime-local"],
 textarea,
 select {
   width: 100%;
-  padding: 8px 10px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  border: 1px solid #f0ad4e;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(244, 196, 0, 0.4);
   box-sizing: border-box;
-  background-color: rgba(0,0,0,0.5);
-  color: white;
+  background-color: var(--primary-black);
+  color: var(--white);
   font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-button {
-  background-color: #f0ad4e;
-  color: black;
-  padding: 10px 15px;
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-yellow);
+  box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.2);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--medium-gray);
+}
+
+/* Buttons */
+button, .btn {
+  background-color: var(--primary-yellow);
+  color: var(--primary-black);
+  padding: 12px 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #d4941f;
-}
-
-p {
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
   text-align: center;
-  font-weight: bold;
-  color: #f0ad4e;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--bright-yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 196, 0, 0.3);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+button.secondary {
+  background-color: transparent;
+  border: 2px solid var(--primary-yellow);
+  color: var(--primary-yellow);
+}
+
+button.secondary:hover {
+  background-color: var(--primary-yellow);
+  color: var(--primary-black);
+}
+
+button.danger {
+  background-color: var(--error);
+  color: var(--white);
+}
+
+button.danger:hover {
+  background-color: #b91c1c;
 }
 
 /* Links */
 a {
-  color: #f0ad4e;
+  color: var(--primary-yellow);
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
+  color: var(--bright-yellow);
   text-decoration: underline;
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-error {
+  color: var(--error);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+/* Alert Messages */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.alert-error {
+  background-color: rgba(220, 38, 38, 0.2);
+  border: 1px solid var(--error);
+  color: #fca5a5;
+}
+
+.alert-success {
+  background-color: rgba(22, 163, 74, 0.2);
+  border: 1px solid var(--success);
+  color: #86efac;
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--warning);
+  color: #fcd34d;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+  
+  form {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  table {
+    width: 95%;
+    font-size: 0.875rem;
+  }
+  
+  table th, table td {
+    padding: 10px 12px;
+  }
 }

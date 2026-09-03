@@ -1,4 +1,5 @@
 <?php
+// attendance/mark_attendance.php
 session_start();
 require_once '../config/db.php';
 
@@ -26,8 +27,8 @@ $profilePic = !empty($profile_pic_db)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
     $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
-    $date = filter_input(INPUT_POST, 'date', FILTER_SANITIZE_STRING);
-    $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+    $date = filter_input(INPUT_POST, 'date', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
     $errors = [];
 
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$date) {
         $errors[] = "Invalid date.";
     }
-    $valid_statuses = ['present', 'absent', 'late'];
+    $valid_statuses = ['present', 'absent', 'late', 'excused'];
     if (!in_array($status, $valid_statuses)) {
         $errors[] = "Invalid status selected.";
     }
@@ -71,23 +72,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch students list
+// Fetch students list using prepared statement
 $students = [];
-$result = $conn->query("SELECT id, full_name FROM users WHERE role = 'student' ORDER BY full_name");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $students[] = $row;
-    }
+$stmt = $conn->prepare("SELECT id, full_name FROM users WHERE role = 'student' ORDER BY full_name");
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $students[] = $row;
 }
+$stmt->close();
 
-// Fetch subjects list
+// Fetch subjects list using prepared statement
 $subjects = [];
-$result = $conn->query("SELECT id, subject_code, subject_name FROM subjects ORDER BY subject_name");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $subjects[] = $row;
-    }
+$stmt = $conn->prepare("SELECT id, subject_code, subject_name FROM subjects ORDER BY subject_name");
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $subjects[] = $row;
 }
+$stmt->close();
 ?>
 
 <!DOCTYPE html>

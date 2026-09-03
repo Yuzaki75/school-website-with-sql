@@ -1,12 +1,13 @@
 <?php
+// login.php
 session_start();
 require_once __DIR__ . '/config/db.php';
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
 
     if ($username !== '' && $password !== '') {
         $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ? LIMIT 1");
@@ -16,9 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $result->fetch_assoc();
 
         if ($user && password_verify($password, $user['password'])) {
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
+            
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
+            
+            // Generate CSRF token for the new session
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
             switch ($user['role']) {
                 case 'admin':

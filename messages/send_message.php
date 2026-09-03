@@ -1,4 +1,5 @@
 <?php
+// messages/send_message.php
 session_start();
 include __DIR__ . '/../config/db.php';
 
@@ -23,17 +24,29 @@ $profilePic = empty($profile_pic_db) ? '../uploads/profile/default.png' : '../up
 
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $receiver_id = (int)$_POST['receiver_id'];
-    $subject = trim($_POST['subject']);
-    $msg = trim($_POST['message']);
+    $receiver_id = filter_input(INPUT_POST, 'receiver_id', FILTER_VALIDATE_INT);
+    $subject = trim($_POST['subject'] ?? '');
+    $msg = trim($_POST['message'] ?? '');
 
     if ($receiver_id && $subject && $msg) {
-        $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, subject, message) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("iiss", $user_id, $receiver_id, $subject, $msg);
-        if ($stmt->execute()) {
-            $message = '<div class="alert alert-success">Message sent successfully!</div>';
+        // Validate receiver exists and is not self
+        $stmt = $conn->prepare("SELECT id FROM users WHERE id = ? AND id != ?");
+        $stmt->bind_param("ii", $receiver_id, $user_id);
+        $stmt->execute();
+        $stmt->store_result();
+        
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            $stmt = $conn->prepare("INSERT INTO messages (sender_id, receiver_id, subject, message) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("iiss", $user_id, $receiver_id, $subject, $msg);
+            if ($stmt->execute()) {
+                header("Location: sent.php?success=Message sent successfully");
+                exit();
+            } else {
+                $message = '<div class="alert alert-danger">Error sending message.</div>';
+            }
         } else {
-            $message = '<div class="alert alert-danger">Error sending message.</div>';
+            $message = '<div class="alert alert-danger">Invalid receiver.</div>';
         }
         $stmt->close();
     } else {
@@ -41,8 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all users except self for receiver
-$users_result = $conn->query("SELECT id, username, full_name FROM users WHERE id != $user_id ORDER BY username");
+// Fetch all users except self for receiver using prepared statement
+$stmt = $conn->prepare("SELECT id, username, full_name FROM users WHERE id != ? ORDER BY username");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$users_result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
