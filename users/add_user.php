@@ -28,14 +28,19 @@ if (empty($profile_pic_db)) {
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username  = trim($_POST['username'] ?? '');
-    $password  = trim($_POST['password'] ?? '');
-    $full_name = trim($_POST['full_name'] ?? '');
-    $email     = trim($_POST['email'] ?? '');
-    $role      = $_POST['role'] ?? 'student';
+    $new_username  = trim($_POST['username'] ?? '');
+    $password      = trim($_POST['password'] ?? '');
+    $full_name     = trim($_POST['full_name'] ?? '');
+    $email         = trim($_POST['email'] ?? '');
+    $role          = trim($_POST['role'] ?? 'student');
 
-    if ($username === '' || $password === '') {
+    // Validate inputs
+    if ($new_username === '' || $password === '') {
         $message = '<div class="alert alert-danger text-center">Username and password are required.</div>';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = '<div class="alert alert-danger text-center">Invalid email address.</div>';
+    } elseif (!in_array($role, ['admin', 'teacher', 'student'])) {
+        $message = '<div class="alert alert-danger text-center">Invalid role selected.</div>';
     } else {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
@@ -43,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 VALUES (?, ?, ?, ?, ?, NOW())");
 
         if ($stmt) {
-            $stmt->bind_param("sssss", $username, $hashedPassword, $full_name, $email, $role);
+            $stmt->bind_param("sssss", $new_username, $hashedPassword, $full_name, $email, $role);
             if ($stmt->execute()) {
                 header("Location: manage_users.php");
                 exit();
@@ -170,7 +175,7 @@ $conn->close();
       <div class="mb-3">
         <label class="form-label text-white">Role</label>
         <select name="role" class="form-select" required>
-          <option value="administrator">Administrator</option>
+          <option value="admin">Administrator</option>
           <option value="teacher">Teacher</option>
           <option value="student">Student</option>
         </select>

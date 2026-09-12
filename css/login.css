@@ -1,10 +1,24 @@
+/* ========== Login Page Styles ========== */
+/* Black & Yellow Academic Theme - Dominican College */
+
+:root {
+  --primary-black: #0B0B0B;
+  --deep-black: #050505;
+  --primary-yellow: #F4C400;
+  --bright-yellow: #FFD21F;
+  --white: #FFFFFF;
+  --off-white: #F7F7F5;
+  --dark-gray: #222222;
+  --error: #DC2626;
+}
+
 /* ========== Global ========== */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    position: relative;
-    min-height: 100vh;
-    overflow-x: hidden;
+  margin: 0;
+  font-family: 'Inter', 'Manrope', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ========== Header ========== */
@@ -13,9 +27,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: rgba(0, 0, 0, 0.8); /* dark background */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-  border-bottom: 2px solid orange;
+  background-color: var(--primary-black);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  border-bottom: 3px solid var(--primary-yellow);
   position: relative;
   z-index: 2;
 }
@@ -23,125 +37,217 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  color: #fff;
+  color: var(--white);
 }
 
 .header-left .school-logo {
-  width: 60px;
+  width: 50px;
   height: auto;
   margin-right: 15px;
   border-radius: 50%;
+  border: 2px solid var(--primary-yellow);
 }
 
 .header-left .school-name {
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.5px;
 }
 
 .header-right .login-btn {
   padding: 10px 20px;
-  font-size: 16px;
-  background-color: black;
-  color: orange;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background-color: var(--primary-yellow);
+  color: var(--primary-black);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
   text-decoration: none;
 }
 
 .header-right .login-btn:hover {
-  background-color: orange;
-  color: black;
+  background-color: var(--bright-yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 196, 0, 0.3);
 }
 
 /* ========== Login Box ========== */
 .login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100vh - 80px);
-    position: relative;
-    z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  position: relative;
+  z-index: 1;
+  padding: 40px 20px;
 }
 
 .login-box {
-    background-color: rgba(255, 255, 255, 0.5);
-    padding: 30px 40px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  background-color: var(--dark-gray);
+  padding: 40px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  border: 1px solid rgba(244, 196, 0, 0.2);
 }
 
 .login-box h2 {
-    text-align: center;
-    margin-bottom: 20px;
+  text-align: center;
+  margin: 0 0 10px 0;
+  color: var(--primary-yellow);
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.login-box .subtitle {
+  text-align: center;
+  color: var(--white);
+  opacity: 0.7;
+  margin-bottom: 30px;
+  font-size: 0.95rem;
 }
 
 .login-box .error {
-    color: red;
-    text-align: center;
-    margin-bottom: 10px;
+  background-color: rgba(220, 38, 38, 0.2);
+  border: 1px solid var(--error);
+  color: #fca5a5;
+  padding: 12px 16px;
+  border-radius: 6px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
 }
 
 /* ========== Form Elements ========== */
 form {
-    margin-top: 20px;
+  margin-top: 0;
 }
 
 label {
-    font-weight: bold;
+  font-weight: 600;
+  color: var(--primary-yellow);
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 8px;
 }
 
 input[type="text"],
 input[type="password"],
-input[type="email"],
-textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+input[type="email"] {
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(244, 196, 0, 0.4);
+  border-radius: 6px;
+  box-sizing: border-box;
+  background-color: var(--primary-black);
+  color: var(--white);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-button {
-    padding: 10px 20px;
-    background-color: black;
-    border: none;
-    border-radius: 5px;
-    color: orange;
-    font-weight: bold;
-    cursor: pointer;
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus {
+  outline: none;
+  border-color: var(--primary-yellow);
+  box-shadow: 0 0 0 3px rgba(244, 196, 0, 0.2);
 }
 
-button:hover {
-    background-color: #333;
+input::placeholder {
+  color: var(--medium-gray);
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 14px 20px;
+  background-color: var(--primary-yellow);
+  border: none;
+  border-radius: 6px;
+  color: var(--primary-black);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--bright-yellow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 196, 0, 0.3);
+}
+
+button[type="submit"]:active {
+  transform: translateY(0);
 }
 
 /* ========== Footer ========== */
 .site-footer {
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    padding: 20px 10px;
-    font-size: 14px;
-    position: relative; /* above blur overlay */
-    z-index: 2;
+  background-color: var(--primary-black);
+  color: var(--white);
+  text-align: center;
+  padding: 20px 10px;
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 2;
+  border-top: 2px solid var(--primary-yellow);
 }
 
 .site-footer a {
-    color: #fff;
-    text-decoration: underline;
+  color: var(--primary-yellow);
+  text-decoration: none;
 }
 
 .site-footer a:hover {
-    color: #d4d4d4;
+  color: var(--bright-yellow);
+  text-decoration: underline;
 }
 
 .footer-content p {
-    margin: 5px 0;
+  margin: 5px 0;
+}
+
+/* ========== Responsive ========== */
+@media screen and (max-width: 768px) {
+  .landing-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px 20px;
+  }
+  
+  .header-left,
+  .header-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .login-box {
+    padding: 30px 25px;
+  }
+  
+  .login-box h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .login-container {
+    padding: 20px 15px;
+  }
+  
+  .login-box {
+    max-width: 100%;
+    padding: 25px 20px;
+  }
+  
+  .header-left .school-name {
+    font-size: 1rem;
+  }
 }
