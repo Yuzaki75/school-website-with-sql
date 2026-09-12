@@ -2,57 +2,70 @@
 # Logs and temp files
 *.log
 *.tmp
+*.swp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Dependencies
-vendor/
-node_modules/
-
-# Build artifacts
-dist/
-build/
-*.min.js
-*.min.css
-*.bundle.js
-
-# Editor/IDE files
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
 
 # System files
 .DS_Store
 Thumbs.db
 
-# Cache directories
-.cache/
-*.cache
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
 
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
-# PHP specific
-*.php~
-phpunit.xml.dist
-composer.lock
-
-# Database
-*.sql.bak
-*.db.bak
-
-# OS generated files
-.DS_Store
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Icon?
-Thumbs.db
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```
